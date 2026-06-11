@@ -1,0 +1,14 @@
+{
+  "name": "saitex-push-vercel",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Saitex Laundry Tracker push notification server (Vercel + Upstash Redis + web-push).",
+  "dependencies": {
+    "@upstash/redis": "^1.31.0",
+    "web-push": "^3.6.7"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

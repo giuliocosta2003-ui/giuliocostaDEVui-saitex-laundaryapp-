@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    { "source": "/subscribe", "destination": "/api/subscribe" },
+    { "source": "/unsubscribe", "destination": "/api/unsubscribe" },
+    { "source": "/send", "destination": "/api/send" },
+    { "source": "/health", "destination": "/api/health" }
+  ]
+}

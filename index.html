@@ -1,0 +1,2669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Saitex Laundry">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Saitex Laundry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --ink:#15181B;--ink-2:#23272B;--ink-3:#3A4045;
+  --surface:#F3F6F7;--card:#FFFFFF;
+  --line:#E4E8EA;--line-2:#CDD3D6;
+  --text:#15181B;--text-mid:#5A6065;--text-muted:#8A9197;
+  --accent:#15181B;--accent-soft:#ECEFF0;
+  --c-progress:#2F5E8C;--bg-progress:#EAF0F6;
+  --c-completed:#2E7152;--bg-completed:#E7F0EB;
+  --c-pending:#9C7016;--bg-pending:#F4EEDF;
+  --c-blocked:#A8392F;--bg-blocked:#F4E9E7;
+  --c-amata:#444A50;--bg-amata:#ECEFF0;
+  --radius:4px;--radius-sm:3px;
+  --shadow:0 1px 2px rgba(21,24,27,0.05);
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --sans:'Archivo',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--surface);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;font-size:14px}
+
+/* Top bar */
+.topbar{background:#FFFFFF;padding:0 26px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid var(--line)}
+.topbar-left{display:flex;align-items:center;gap:16px}
+.lang-wrap{position:relative}
+.gear-btn{width:34px;height:34px;border-radius:var(--radius-sm);background:#fff;border:1px solid var(--line-2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.15s}
+.gear-btn:hover{background:var(--surface)}
+.gear-btn svg{width:18px;height:18px;fill:none;stroke:var(--text-mid);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.lang-menu{position:absolute;top:44px;left:0;background:var(--card);border:1px solid var(--line);border-radius:var(--radius-sm);box-shadow:0 6px 20px rgba(21,24,27,0.14);padding:5px;min-width:170px;display:none;z-index:200}
+.lang-menu.open{display:block}
+.lang-menu-title{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);padding:6px 10px 4px}
+.lang-opt{width:100%;display:flex;align-items:center;gap:9px;padding:8px 10px;border:none;background:none;border-radius:3px;cursor:pointer;font-family:var(--sans);font-size:14px;color:var(--text);text-align:left;transition:background 0.12s}
+.lang-opt:hover{background:var(--surface)}
+.lang-opt.active{background:var(--surface);color:var(--ink);font-weight:600}
+.lang-opt span{font-size:16px;line-height:1}
+.topbar-brand{display:flex;align-items:center;gap:13px}
+.brand-logo{height:21px;width:auto;display:block}
+.brand-fallback{font-size:21px;font-weight:800;letter-spacing:2.5px;color:var(--ink);display:none}
+.brand-divider{width:1px;height:22px;background:var(--line-2)}
+.brand-sub{font-size:10.5px;font-weight:600;color:var(--text-muted);letter-spacing:1.6px;text-transform:uppercase}
+.topbar-right{display:flex;align-items:center;gap:15px}
+.topbar-time{font-family:var(--mono);font-size:13px;color:var(--text-muted);letter-spacing:1px}
+.sync-indicator{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-muted)}
+.sheet-btn{width:34px;height:34px;border-radius:var(--radius-sm);background:#fff;border:1px solid var(--line-2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.15s;flex-shrink:0}
+.sheet-btn:hover{background:var(--surface)}
+.sheet-btn svg{width:17px;height:17px;fill:none;stroke:var(--text-mid);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* View toggle (Manager / Operator) */
+.view-toggle{display:flex;background:var(--surface);border:1px solid var(--line-2);border-radius:var(--radius-sm);padding:2px;gap:2px}
+.vt-btn{font-family:var(--sans);font-size:12px;font-weight:600;color:var(--text-mid);background:none;border:none;border-radius:3px;padding:6px 11px;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.vt-btn.active{background:var(--ink);color:#fff}
+.vt-alpha{font-size:8.5px;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;background:var(--line-2);color:var(--text-mid);padding:1px 4px;border-radius:3px}
+.vt-btn.active .vt-alpha{background:rgba(255,255,255,0.25);color:#fff}
+
+/* ===== OPERATOR VIEW ===== */
+.op-main{max-width:680px}
+.op-banner{display:none;background:var(--c-blocked);color:#fff;border-radius:var(--radius);padding:14px 16px;margin-bottom:14px;align-items:flex-start;gap:12px;box-shadow:0 4px 14px rgba(178,58,54,0.32);animation:opSlam .35s cubic-bezier(.2,1.3,.4,1)}
+.op-banner.show{display:flex}
+@keyframes opSlam{from{opacity:0;transform:scale(.94) translateY(-8px)}to{opacity:1;transform:none}}
+.ub-icon{font-size:22px;line-height:1;flex-shrink:0}
+.ub-body{flex:1;min-width:0}
+.ub-title{font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;opacity:.95}
+.ub-codes{font-family:var(--mono);font-size:15px;font-weight:600;margin-top:3px;word-break:break-word}
+.ub-close{background:rgba(255,255,255,.2);border:none;color:#fff;width:30px;height:30px;border-radius:6px;font-size:15px;cursor:pointer;flex-shrink:0}
+.op-search{position:relative;margin-bottom:12px}
+.op-search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:17px;height:17px;fill:none;stroke:var(--text-muted);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.op-search input{width:100%;font-family:var(--mono);font-size:16px;text-transform:uppercase;letter-spacing:.5px;padding:13px 14px 13px 42px;border-radius:var(--radius-sm);border:1.5px solid var(--line-2);background:var(--card);color:var(--text);outline:none}
+.op-search input::placeholder{font-family:var(--sans);text-transform:none;letter-spacing:0;color:var(--text-muted)}
+.op-search input:focus{border-color:var(--accent)}
+.op-alpha-note{font-size:11.5px;color:var(--text-muted);text-align:center;margin-bottom:14px;font-style:italic}
+.op-tabs{display:flex;gap:6px;margin-bottom:14px}
+/* Shift plan — manager card */
+.plan-toggle{display:flex;gap:6px;margin-bottom:12px}
+.plan-opt{flex:1;padding:9px;border:1px solid var(--line-2);background:var(--card);border-radius:var(--radius-sm);font-family:var(--sans);font-size:13px;font-weight:600;color:var(--text-mid);cursor:pointer}
+.plan-opt.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.plan-note{font-size:12px;color:var(--text-muted);line-height:1.5;margin-bottom:12px}
+.plan-list{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;max-height:340px;overflow-y:auto}
+.plan-item{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm)}
+.plan-num{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;font-family:var(--mono);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.plan-item-main{flex:1;min-width:0}
+.plan-item-code{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--text);word-break:break-all}
+.plan-item-sub{font-size:11px;color:var(--text-mid);margin-top:1px}
+.plan-arrows{display:flex;flex-direction:column;gap:2px;flex-shrink:0}
+.plan-arrows button{width:26px;height:18px;border:1px solid var(--line-2);background:var(--card);border-radius:3px;cursor:pointer;font-size:9px;color:var(--text-mid);display:flex;align-items:center;justify-content:center;padding:0}
+.plan-arrows button:disabled{opacity:.3;cursor:default}
+.plan-save{width:100%;padding:11px;border:none;background:var(--ink);color:#fff;border-radius:var(--radius-sm);font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer}
+.plan-save:hover{background:var(--ink-2)}
+/* Shift plan — operator */
+.op-plan-banner{font-size:11.5px;font-weight:600;color:var(--text-mid);background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);padding:8px 11px;margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.op-plan-banner::before{content:"📋"}
+.op-plan-banner.auto::before{content:"⚙️"}
+.op-num{flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--ink);color:#fff;font-family:var(--mono);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-right:9px}
+.op-pill.op-pill-pinned{background:#FFF4D6;color:#7A5C00;border:1px solid #F1D88A}
+
+/* ─── Fullscreen Shift Plan editor ─── */
+.plan-editor{position:fixed;inset:0;background:#F3F6F7;z-index:600;display:none;flex-direction:column}
+.plan-editor.show{display:flex;animation:peIn .18s ease}
+@keyframes peIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.plan-editor-bar{display:flex;align-items:center;justify-content:space-between;padding:14px 22px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.plan-editor-title{font-family:var(--sans);font-size:17px;font-weight:700;color:var(--text);letter-spacing:.3px}
+.plan-editor-actions{display:flex;gap:10px}
+.pe-cancel{padding:9px 16px;border:1px solid var(--line-2);background:#fff;color:var(--text-mid);border-radius:var(--radius-sm);font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer}
+.pe-cancel:hover{background:var(--surface)}
+.pe-save{padding:9px 18px;border:none;background:var(--ink);color:#fff;border-radius:var(--radius-sm);font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer}
+.pe-save:hover{background:var(--ink-2)}
+.plan-editor-body{flex:1;overflow:auto;display:grid;grid-template-columns:1fr 340px;gap:22px;padding:22px;max-width:1280px;margin:0 auto;width:100%}
+@media(max-width:900px){
+  .plan-editor-body{grid-template-columns:1fr;padding:14px;gap:14px}
+}
+.plan-editor-col{display:flex;flex-direction:column;gap:18px}
+.plan-editor-aside{}
+.ed-section-title{font-family:var(--sans);font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:10px}
+.ed-empty{font-size:12.5px;color:var(--text-muted);padding:18px;background:#fff;border:1px dashed var(--line-2);border-radius:var(--radius-sm);text-align:center}
+.ed-pin{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#FFF4D6;border:1px solid #F1D88A;border-radius:var(--radius-sm);margin-bottom:6px}
+.ed-pin-icon{font-size:14px}
+.ed-num{flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--ink);color:#fff;font-family:var(--mono);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.ed-pin-main{flex:1;min-width:0}
+.ed-pin-code{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--text)}
+.ed-pin-sub{font-size:11.5px;color:var(--text-mid);margin-top:1px}
+.ed-arrows{display:flex;flex-direction:column;gap:2px;flex-shrink:0}
+.ed-arrows button{width:28px;height:18px;border:1px solid var(--line-2);background:#fff;border-radius:3px;cursor:pointer;font-size:9px;color:var(--text-mid);display:flex;align-items:center;justify-content:center;padding:0}
+.ed-arrows button:disabled{opacity:.3;cursor:default}
+.ed-unpin{width:28px;height:28px;border:1px solid #C2504B;background:#fff;color:#C2504B;border-radius:var(--radius-sm);cursor:pointer;flex-shrink:0;font-size:12px}
+.ed-unpin:hover{background:#FCF4F3}
+.ed-group{background:#fff;border:1px solid var(--line);border-radius:var(--radius-sm);margin-bottom:6px;overflow:hidden}
+.ed-group-head{display:flex;align-items:center;gap:11px;padding:11px 14px;cursor:pointer;transition:background .1s}
+.ed-group-head:hover{background:var(--surface)}
+.ed-group-head.urg .ed-group-name{color:var(--c-blocked)}
+.ed-group-main{flex:1;min-width:0}
+.ed-group-name{font-family:var(--sans);font-size:14px;font-weight:700;color:var(--text)}
+.ed-group-sub{font-size:11.5px;color:var(--text-mid);margin-top:1px}
+.ed-chev{width:14px;height:14px;fill:none;stroke:var(--text-mid);stroke-width:2;transition:transform .15s;flex-shrink:0}
+.ed-chev.open{transform:rotate(180deg)}
+.ed-group-samples{padding:0 14px 12px;display:flex;flex-direction:column;gap:5px;background:var(--surface)}
+.ed-sample{display:flex;align-items:center;gap:10px;padding:8px 11px;background:#fff;border:1px solid var(--line);border-radius:3px}
+.ed-sample.urg{border-left:3px solid var(--c-blocked)}
+.ed-sample-main{flex:1;min-width:0}
+.ed-sample-code{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--text)}
+.ed-sample-sub{font-size:11px;color:var(--text-mid);margin-top:1px}
+.ed-pin-btn{padding:6px 10px;border:1px solid var(--line-2);background:#fff;color:var(--text-mid);border-radius:3px;cursor:pointer;font-family:var(--sans);font-size:11px;font-weight:600;flex-shrink:0;white-space:nowrap}
+.ed-pin-btn:hover{background:#FFF4D6;border-color:#F1D88A;color:#7A5C00}
+/* Command box */
+.plan-cmd-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius-sm);padding:18px;position:sticky;top:78px}
+.plan-cmd-title{font-family:var(--sans);font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px}
+.plan-cmd-help{font-size:11.5px;color:var(--text-muted);margin-bottom:12px}
+.plan-cmd-input{width:100%;font-family:var(--mono);font-size:13px;padding:11px 13px;border:1.5px solid var(--line-2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);outline:none;box-sizing:border-box}
+.plan-cmd-input:focus{border-color:var(--ink);background:#fff}
+.plan-cmd-msg{min-height:18px;margin-top:9px;font-size:11.5px;font-weight:600}
+.plan-cmd-msg.ok{color:#33833F}
+.plan-cmd-msg.err{color:var(--c-blocked)}
+.plan-cmd-examples{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.cmd-ex-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:8px}
+.plan-cmd-examples code{display:block;font-family:var(--mono);font-size:11.5px;color:var(--text);background:var(--surface);padding:5px 8px;border-radius:3px;margin-bottom:3px}
+/* Summary stripe on the small plan card */
+.plan-summary{display:flex;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);padding:11px;margin-bottom:11px;font-size:11.5px;color:var(--text-mid)}
+.plan-summary > div{flex:1;text-align:center}
+.plan-summary-n{display:block;font-family:var(--mono);font-size:18px;font-weight:700;color:var(--text);margin-bottom:1px}
+
+/* ─── Pin notice modal (operator) ─── */
+.pin-notice{position:fixed;inset:0;background:rgba(21,24,27,.7);display:flex;align-items:center;justify-content:center;z-index:700;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(4px);padding:20px}
+.pin-notice.show{opacity:1;pointer-events:all}
+.pin-notice-dialog{background:#fff;border-radius:14px;padding:32px 28px 26px;width:min(420px,100%);text-align:center;box-shadow:0 24px 70px rgba(21,24,27,.3);animation:pinIn .25s cubic-bezier(.34,1.56,.64,1) both}
+.pin-notice-icon{font-size:42px;margin-bottom:14px}
+.pin-notice-title{font-family:var(--sans);font-size:20px;font-weight:700;color:var(--text);margin-bottom:6px}
+.pin-notice-sub{font-size:13px;color:var(--text-muted);margin-bottom:22px}
+.pin-notice-body{margin-bottom:22px;max-height:50vh;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
+.pin-modal-item{background:#FFF4D6;border:1px solid #F1D88A;border-radius:var(--radius-sm);padding:14px;text-align:left}
+.pin-modal-code{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--text);word-break:break-all}
+.pin-modal-sub{font-size:12px;color:var(--text-mid);margin-top:3px}
+.pin-notice-ok{width:100%;padding:14px;border:none;background:var(--ink);color:#fff;border-radius:var(--radius-sm);font-family:var(--sans);font-size:15px;font-weight:700;cursor:pointer}
+.pin-notice-ok:hover{background:var(--ink-2)}
+
+/* ─── Manager messages (bulletin board) ─── */
+.msg-card{}
+.mgr-msg-list{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;max-height:280px;overflow-y:auto}
+.mgr-msg-empty{font-size:12px;color:var(--text-muted);text-align:center;padding:18px;background:var(--surface);border:1px dashed var(--line-2);border-radius:var(--radius-sm)}
+.mgr-msg-item{background:#FFF8E5;border:1px solid #EFD994;border-radius:var(--radius-sm);padding:10px 12px;position:relative}
+.mgr-msg-text{font-size:13px;line-height:1.45;color:var(--text);white-space:pre-wrap;word-wrap:break-word}
+.mgr-msg-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:6px;gap:8px}
+.mgr-msg-time{font-family:var(--mono);font-size:10.5px;color:var(--text-muted)}
+.mgr-msg-del{width:22px;height:22px;border:1px solid var(--line-2);background:#fff;color:var(--text-mid);border-radius:3px;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center;padding:0}
+.mgr-msg-del:hover{background:#FCF4F3;color:var(--c-blocked);border-color:#E4B3AF}
+.mgr-msg-input-row{display:flex;gap:6px}
+.mgr-msg-input{flex:1;min-width:0;font-family:var(--sans);font-size:13px;padding:9px 11px;border:1.5px solid var(--line-2);border-radius:var(--radius-sm);background:#fff;color:var(--text);outline:none}
+.mgr-msg-input:focus{border-color:var(--ink)}
+.mgr-msg-send{padding:9px 16px;border:none;background:var(--ink);color:#fff;border-radius:var(--radius-sm);font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0}
+.mgr-msg-send:hover{background:var(--ink-2)}
+
+/* Operator banner — clickable, persistent indicator of active messages */
+.op-msg-banner{width:100%;display:flex;align-items:center;gap:9px;background:#FFF8E5;border:1px solid #EFD994;border-radius:var(--radius-sm);padding:11px 14px;margin-bottom:14px;font-family:var(--sans);font-size:13px;font-weight:600;color:#7A5C00;cursor:pointer;text-align:left}
+.op-msg-banner:hover{background:#FFF1CC}
+.op-push-banner{width:100%;display:flex;align-items:center;gap:9px;background:#E8F0FE;border:1px solid #C5D8FB;border-radius:var(--radius-sm);padding:11px 14px;margin-bottom:14px;font-family:var(--sans);font-size:13px;font-weight:600;color:#2A4F7C;cursor:pointer;text-align:left}
+.op-push-banner:hover{background:#DCE9FE}
+.op-push-icon{font-size:15px}
+.op-msg-icon{font-size:16px}
+
+/* Messages modal items */
+#msg-modal .msg-modal-item{background:#FFF8E5;border:1px solid #EFD994;border-radius:var(--radius-sm);padding:14px;text-align:left}
+#msg-modal .msg-modal-text{font-size:14px;line-height:1.5;color:var(--text);white-space:pre-wrap;word-wrap:break-word}
+#msg-modal .msg-modal-time{font-family:var(--mono);font-size:11px;color:var(--text-muted);margin-top:6px}
+.op-tab{flex:1;position:relative;padding:12px 8px;border:1px solid var(--line-2);background:var(--card);border-radius:var(--radius-sm);font-family:var(--sans);font-size:13px;font-weight:600;color:var(--text-mid);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap;min-width:0}
+.op-tab .op-tab-lbl{overflow:hidden;text-overflow:ellipsis}
+.op-tab.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.op-tab-n{font-family:var(--mono);font-size:12px;font-weight:600;background:var(--surface);color:var(--text-mid);border-radius:20px;padding:1px 7px;flex-shrink:0}
+.op-tab.active .op-tab-n{background:rgba(255,255,255,0.2);color:#fff}
+.op-tab.has-urgent::after{content:"";position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:var(--c-blocked);border:1.5px solid var(--card)}
+.op-tab.active.has-urgent::after{border-color:var(--ink)}
+.op-grouprow{display:flex;justify-content:flex-end;margin-bottom:14px}
+.op-grouptoggle{display:inline-flex;align-items:center;gap:7px;font-family:var(--sans);font-size:12px;font-weight:600;color:var(--text-mid);background:var(--card);border:1px solid var(--line-2);border-radius:var(--radius-sm);padding:7px 12px;cursor:pointer}
+.op-grouptoggle svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2}
+.op-grouptoggle.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.op-group{margin-bottom:20px}
+.op-group-head{display:flex;align-items:center;gap:9px;margin:0 2px 10px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.op-group-name{font-size:13.5px;font-weight:700;letter-spacing:.3px;color:var(--text)}
+.op-group.urgent .op-group-name{color:var(--c-blocked)}
+.op-group-urg{font-size:9.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#fff;background:var(--c-blocked);padding:2px 7px;border-radius:4px}
+.op-group-n{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--text-muted);background:var(--surface);border-radius:20px;padding:1px 9px;margin-left:auto}
+/* Recipe filter dropdown */
+.op-rfilter-wrap{position:relative;margin-bottom:14px}
+.op-rfbtn-row{display:flex;align-items:center;gap:6px}
+.op-rfbtn{display:inline-flex;align-items:center;gap:7px;font-family:var(--sans);font-size:13px;font-weight:600;color:var(--text-mid);background:var(--card);border:1px solid var(--line-2);border-radius:var(--radius-sm);padding:9px 13px;cursor:pointer;min-width:0;flex:1;white-space:nowrap;overflow:hidden}
+.op-rfbtn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;flex-shrink:0}
+.op-rfbtn .rfchev{margin-left:auto;transition:transform .18s}
+.op-rfbtn.open .rfchev{transform:rotate(180deg)}
+.op-rfbtn.is-set{background:var(--ink);color:#fff;border-color:var(--ink)}
+.op-rfbtn span{overflow:hidden;text-overflow:ellipsis}
+.op-rfclear{width:34px;height:34px;flex-shrink:0;border:1px solid var(--line-2);background:var(--card);border-radius:var(--radius-sm);cursor:pointer;color:var(--text-muted);font-size:13px;display:flex;align-items:center;justify-content:center}
+.op-rfclear:hover{background:var(--surface)}
+.op-rdrop{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--card);border:1px solid var(--line);border-radius:var(--radius-sm);box-shadow:0 8px 24px rgba(21,24,27,0.16);z-index:200;padding:5px;display:none;max-height:60vh;overflow-y:auto}
+.op-rdrop.open{display:block;animation:opFade .15s ease}
+@keyframes opFade{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.op-rdopt{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 13px;border:none;background:none;border-radius:4px;cursor:pointer;font-family:var(--sans);font-size:14px;font-weight:500;color:var(--text);text-align:left}
+.op-rdopt:hover{background:var(--surface)}
+.op-rdopt.sel{background:var(--accent-soft);color:var(--ink);font-weight:700}
+.op-rdopt-n{font-family:var(--mono);font-size:12px;color:var(--text-muted);white-space:nowrap;flex-shrink:0}
+.op-sec{display:flex;align-items:center;gap:8px;margin:18px 2px 10px;font-size:12px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--text-muted)}
+.op-sec.urgent{color:var(--c-blocked)}
+.op-sec .n{color:var(--text-muted)}
+.op-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:11px;margin-bottom:8px;box-shadow:0 1px 2px rgba(19,33,46,.05)}
+.op-card.urgent{border-color:rgba(178,58,54,.4);box-shadow:0 2px 10px rgba(178,58,54,.12);border-left:4px solid var(--c-blocked)}
+.op-card.done{opacity:.7;padding:8px 11px}
+.op-card.saving{opacity:.5;pointer-events:none}
+.op-top{display:flex;align-items:flex-start;gap:10px}
+.op-top-right{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.op-code{font-family:var(--mono);font-size:16px;font-weight:600;letter-spacing:.4px;color:var(--text);word-break:break-all}
+.op-card.done .op-code{font-size:13px}
+.op-badges{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.op-pill{font-size:10px;font-weight:700;letter-spacing:.3px;padding:3px 7px;border-radius:4px;white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
+.op-pill.dot::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.op-st-attesa{background:var(--bg-pending);color:var(--c-pending)}
+.op-st-lavorazione{background:var(--bg-progress);color:var(--c-progress)}
+.op-st-completato{background:var(--bg-completed);color:var(--c-completed)}
+.op-st-bloccato{background:var(--bg-blocked);color:var(--c-blocked)}
+.op-pill-urgent{background:var(--c-blocked);color:#fff}
+.op-pill-urgent::before{background:#fff}
+.op-pill-age{font-family:var(--mono);background:var(--surface);color:var(--text-mid);border:1px solid var(--line-2)}
+.op-pill-age.warn{background:var(--bg-pending);color:var(--c-pending);border-color:transparent}
+.op-pill-age.late{background:var(--bg-blocked);color:var(--c-blocked);border-color:transparent}
+.op-desc{font-size:12.5px;font-weight:500;color:var(--text);margin-top:6px}
+.op-meta{font-size:11px;color:var(--text-mid);margin-top:3px}
+.op-recipe{display:inline-block;font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:2px 7px;border-radius:4px;margin-top:6px}
+.op-stamp{font-family:var(--mono);font-size:10px;color:var(--text-muted);margin-top:6px}
+.op-actions{display:flex;gap:7px;margin-top:10px}
+.op-act{flex:1;border:none;border-radius:var(--radius-sm);padding:11px 8px;font-family:var(--sans);font-size:12.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+.op-act svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.op-act:active{transform:scale(.98)}
+.op-act-start,.op-act-resume{background:var(--c-progress);color:#fff;flex:2}
+.op-act-done{background:var(--c-completed);color:#fff;flex:2}
+.op-act-block{background:var(--card);color:var(--c-blocked);border:1.5px solid var(--line-2)}
+.op-done-toggle{width:100%;display:flex;align-items:center;gap:9px;background:none;border:none;padding:6px 2px;cursor:pointer;color:var(--text-muted);font-family:var(--sans);font-size:12px;font-weight:700;letter-spacing:.7px;text-transform:uppercase}
+.op-done-toggle .chev{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;transition:transform .18s}
+.op-done-toggle.open .chev{transform:rotate(90deg)}
+.op-empty{text-align:center;color:var(--text-muted);font-size:14px;padding:28px 16px;background:var(--card);border:1px dashed var(--line-2);border-radius:var(--radius)}
+.op-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:30px;font-size:14px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:0;transition:opacity .2s,transform .2s;z-index:300;pointer-events:none;max-width:90vw;text-align:center}
+.op-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.op-toast.err{background:var(--c-blocked)}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#3BA776;flex-shrink:0}
+.sync-dot.loading{background:#C99A2E;animation:pulse 1s infinite}
+.sync-dot.error{background:#C2504B}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.35}}
+
+/* ── Lock button ── */
+.lock-btn{width:34px;height:34px;border-radius:var(--radius-sm);background:#fff;border:1px solid var(--line-2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.lock-btn:hover{background:var(--surface)}
+.lock-btn svg{width:16px;height:16px;fill:none;stroke:var(--text-mid);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* ── PIN modal ── */
+.pin-overlay{position:fixed;inset:0;background:rgba(21,24,27,.65);display:flex;align-items:center;justify-content:center;z-index:500;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(3px)}
+.pin-overlay.show{opacity:1;pointer-events:all}
+.pin-dialog{background:var(--card);border-radius:12px;padding:36px 32px 28px;width:min(340px,90vw);text-align:center;box-shadow:0 20px 60px rgba(21,24,27,.25);animation:pinIn .22s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes pinIn{from{transform:scale(.92) translateY(10px)}to{transform:none}}
+.pin-icon{font-size:32px;margin-bottom:14px}
+.pin-title{font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px}
+.pin-sub{font-size:13px;color:var(--text-muted);margin-bottom:24px}
+.pin-input{width:100%;font-family:var(--mono);font-size:28px;font-weight:700;letter-spacing:8px;text-align:center;padding:14px;border:1.5px solid var(--line-2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);outline:none;transition:border-color .15s}
+.pin-input:focus{border-color:var(--ink);background:#fff}
+.pin-input.shake{animation:pinShake .45s ease}
+@keyframes pinShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+.pin-error{height:20px;font-size:12px;color:var(--c-blocked);font-weight:600;margin-top:8px}
+.pin-actions{display:flex;gap:10px;margin-top:20px}
+.pin-cancel{flex:1;padding:12px;border:1px solid var(--line-2);background:var(--card);border-radius:var(--radius-sm);font-family:var(--sans);font-size:14px;font-weight:600;color:var(--text-mid);cursor:pointer}
+.pin-cancel:hover{background:var(--surface)}
+.pin-ok{flex:2;padding:12px;border:none;background:var(--ink);color:#fff;border-radius:var(--radius-sm);font-family:var(--sans);font-size:14px;font-weight:700;cursor:pointer}
+.pin-ok:hover{background:var(--ink-2)}
+
+/* Layout */
+.main{padding:24px;max-width:1320px;margin:0 auto;width:100%}
+.stats-row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:1px;margin-bottom:22px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius-sm);overflow:hidden}
+.stat-card{background:var(--card);padding:14px 18px;cursor:pointer;transition:background 0.12s;user-select:none;border-top:2px solid transparent}
+.stat-card:hover{background:#FAFBFC}
+.stat-card.active-filter{background:#FAFBFC}
+.stat-card.active-filter.s-attesa{border-top-color:var(--c-pending)}
+.stat-card.active-filter.s-lavorazione{border-top-color:var(--c-progress)}
+.stat-card.active-filter.s-completato{border-top-color:var(--c-completed)}
+.stat-card.active-filter.s-bloccato{border-top-color:var(--c-blocked)}
+.stat-card.active-filter.s-overdue{border-top-color:#C2504B}
+.stat-card.s-overdue .stat-value{color:#C2504B}
+.stat-card.s-overdue .stat-label{color:#C2504B}
+.stat-label{font-size:10.5px;font-weight:600;letter-spacing:0.6px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px}
+.stat-value{font-size:24px;font-weight:600;font-family:var(--mono);color:var(--text);line-height:1}
+.stat-card.s-lavorazione .stat-value{color:var(--c-progress)}
+.stat-card.s-completato .stat-value{color:var(--c-completed)}
+.stat-card.s-attesa .stat-value{color:var(--c-pending)}
+.stat-card.s-bloccato .stat-value{color:var(--c-blocked)}
+.layout{display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start}
+.col-left{display:flex;flex-direction:column;gap:14px;position:sticky;top:84px;max-height:calc(100vh - 100px);overflow-y:auto;overflow-x:hidden;padding-right:6px;scrollbar-width:thin}
+.col-left::-webkit-scrollbar{width:7px}
+.col-left::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:4px}
+.col-left::-webkit-scrollbar-track{background:transparent}
+.col-right{display:flex;flex-direction:column;gap:0}
+.card{background:var(--card);border-radius:var(--radius-sm);border:1px solid var(--line);padding:18px;box-shadow:var(--shadow)}
+.card-title{font-size:10.5px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px}
+
+/* Code input */
+.input-wrap{position:relative}
+.code-input{width:100%;font-family:var(--mono);font-size:21px;font-weight:500;letter-spacing:1px;text-transform:uppercase;padding:13px 44px 13px 14px;border-radius:var(--radius-sm);border:1px solid var(--line-2);background:var(--surface);color:var(--text);outline:none;transition:border-color 0.15s,box-shadow 0.15s;text-align:left;-webkit-appearance:none}
+.code-input::placeholder{font-size:13px;letter-spacing:0.2px;font-weight:400;color:var(--text-muted);font-family:var(--sans)}
+.code-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);background:#fff}
+.clear-btn{position:absolute;right:11px;top:50%;transform:translateY(-50%);width:24px;height:24px;border-radius:3px;background:var(--line);border:none;cursor:pointer;display:none;align-items:center;justify-content:center;color:var(--text-mid);font-size:13px;transition:background 0.15s}
+.clear-btn:hover{background:var(--line-2)}
+.clear-btn.visible{display:flex}
+
+/* Status selector */
+.stato-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.stato-btn{padding:11px 12px;border-radius:var(--radius-sm);border:1px solid var(--line);background:var(--card);cursor:pointer;text-align:left;transition:border-color 0.12s,background 0.12s;display:flex;flex-direction:row;align-items:center;gap:9px;-webkit-tap-highlight-color:transparent}
+.stato-btn:hover{border-color:var(--line-2);background:var(--surface)}
+.stato-btn .s-emoji{width:8px;height:8px;border-radius:50%;background:var(--text-muted);font-size:0;line-height:0;flex-shrink:0}
+.stato-btn .s-label{font-size:13px;font-weight:500;color:var(--text-mid)}
+.k-lavorazione .s-emoji{background:var(--c-progress)}
+.k-completato .s-emoji{background:var(--c-completed)}
+.k-attesa .s-emoji{background:var(--c-pending)}
+.k-bloccato .s-emoji{background:var(--c-blocked)}
+.k-amata .s-emoji{background:var(--c-amata)}
+.stato-btn.sel{box-shadow:inset 0 0 0 1px currentColor}
+.stato-btn.sel-lavorazione{border-color:var(--c-progress);background:var(--bg-progress);color:var(--c-progress)}
+.stato-btn.sel-lavorazione .s-label{color:var(--c-progress)}
+.stato-btn.sel-completato{border-color:var(--c-completed);background:var(--bg-completed);color:var(--c-completed)}
+.stato-btn.sel-completato .s-label{color:var(--c-completed)}
+.stato-btn.sel-attesa{border-color:var(--c-pending);background:var(--bg-pending);color:var(--c-pending)}
+.stato-btn.sel-attesa .s-label{color:var(--c-pending)}
+.stato-btn.sel-bloccato{border-color:var(--c-blocked);background:var(--bg-blocked);color:var(--c-blocked)}
+.stato-btn.sel-bloccato .s-label{color:var(--c-blocked)}
+.stato-btn.wide{grid-column:1 / -1}
+.stato-btn.sel-amata{border-color:var(--c-amata);background:var(--bg-amata);color:var(--c-amata)}
+.stato-btn.sel-amata .s-label{color:var(--c-amata)}
+
+/* Send button */
+.send-btn{width:100%;padding:13px;font-family:var(--sans);font-size:14px;font-weight:600;letter-spacing:0.2px;border-radius:var(--radius-sm);border:none;background:var(--ink);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;transition:background 0.15s;-webkit-tap-highlight-color:transparent}
+.send-btn:hover{background:var(--ink-2)}
+.send-btn:disabled{opacity:0.5;cursor:not-allowed}
+.send-btn svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;display:none;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Result */
+.result-card{border-radius:var(--radius-sm);padding:12px 14px;display:flex;align-items:flex-start;gap:10px;animation:fadeUp 0.2s ease;border-left:3px solid var(--line-2);background:var(--surface)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.result-card.success{background:var(--bg-completed);border-left-color:var(--c-completed)}
+.result-card.error{background:var(--bg-blocked);border-left-color:var(--c-blocked)}
+.result-icon{display:none}
+.result-title{font-size:13px;font-weight:600}
+.result-card.success .result-title{color:var(--c-completed)}
+.result-card.error .result-title{color:var(--c-blocked)}
+.result-sub{font-size:12px;color:var(--text-mid);margin-top:2px}
+
+/* List */
+.list-header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 13px;border-bottom:1px solid var(--line);gap:10px}
+.list-header-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.new-btn{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:#fff;background:var(--ink);border:1px solid var(--ink);border-radius:var(--radius-sm);padding:6px 12px;cursor:pointer;transition:all 0.15s;font-family:var(--sans)}
+.new-btn:hover{background:var(--ink-2)}
+.new-btn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round}
+
+/* ─── New Sample form (fullscreen) ─── */
+.add-form{position:fixed;inset:0;background:#F3F6F7;z-index:650;display:none;flex-direction:column}
+.add-form.show{display:flex;animation:peIn .18s ease}
+.add-form-bar{display:flex;align-items:center;justify-content:space-between;padding:14px 22px;background:#fff;border-bottom:1px solid var(--line)}
+.add-form-title{font-family:var(--sans);font-size:17px;font-weight:700;color:var(--text);letter-spacing:.3px}
+.af-close{width:34px;height:34px;border:1px solid var(--line-2);background:#fff;color:var(--text-mid);border-radius:var(--radius-sm);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+.af-close:hover{background:var(--surface)}
+.add-form-body{flex:1;overflow:auto;padding:24px;max-width:760px;margin:0 auto;width:100%;display:flex;flex-direction:column;gap:14px}
+.af-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.af-field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.af-field.af-full{grid-column:1/-1}
+.af-lbl{font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text-muted)}
+.af-input{font-family:var(--sans);font-size:14px;padding:11px 13px;border:1.5px solid var(--line-2);border-radius:var(--radius-sm);background:#fff;color:var(--text);outline:none;transition:border-color .15s;width:100%;box-sizing:border-box}
+.af-input:focus{border-color:var(--ink)}
+select.af-input{cursor:pointer;background:#fff}
+.af-pin{display:flex;align-items:center;gap:10px;padding:14px 16px;background:#FFF4D6;border:1px solid #F1D88A;border-radius:var(--radius-sm);cursor:pointer;font-size:13.5px;font-weight:600;color:#7A5C00}
+.af-pin input[type="checkbox"]{width:18px;height:18px;cursor:pointer;accent-color:#7A5C00}
+.af-pin-icon{font-size:15px}
+.af-msg{min-height:20px;font-size:12.5px;font-weight:600;text-align:center;padding:4px 0}
+.af-msg.ok{color:#33833F}
+.af-msg.err{color:var(--c-blocked)}
+.af-dup-warn{background:#FCF4F3;border:1px solid #E8C5C0;border-radius:var(--radius-sm);padding:14px 16px}
+.af-dup-title{font-size:13px;font-weight:700;color:#C2504B;margin-bottom:8px}
+.af-dup-list{margin:0 0 12px;padding-left:18px;font-size:12px;color:var(--text-mid);line-height:1.6}
+.af-dup-list li{font-family:var(--mono);font-size:11.5px}
+.af-dup-actions{display:flex;gap:8px;justify-content:flex-end}
+.af-dup-cancel{padding:8px 14px;border:1px solid var(--line-2);background:#fff;color:var(--text-mid);border-radius:var(--radius-sm);font-family:var(--sans);font-size:12.5px;font-weight:600;cursor:pointer}
+.af-dup-ok{padding:8px 16px;border:none;background:#C2504B;color:#fff;border-radius:var(--radius-sm);font-family:var(--sans);font-size:12.5px;font-weight:700;cursor:pointer}
+.add-form-actions{display:flex;gap:10px;padding:14px 22px;background:#fff;border-top:1px solid var(--line);justify-content:flex-end;max-width:760px;margin:0 auto;width:100%;box-sizing:border-box}
+.af-cancel{padding:11px 18px;border:1px solid var(--line-2);background:#fff;color:var(--text-mid);border-radius:var(--radius-sm);font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer}
+.af-cancel:hover{background:var(--surface)}
+.af-save-add{padding:11px 16px;border:1px solid var(--ink);background:#fff;color:var(--ink);border-radius:var(--radius-sm);font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer}
+.af-save-add:hover{background:var(--surface)}
+.af-save-add:disabled,.af-save:disabled{opacity:.5;cursor:default}
+.af-save{padding:11px 22px;border:none;background:var(--ink);color:#fff;border-radius:var(--radius-sm);font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer}
+.af-save:hover{background:var(--ink-2)}
+@media(max-width:600px){
+  .add-form-body{padding:16px}
+  .af-row{grid-template-columns:1fr;gap:12px}
+  .add-form-actions{padding:12px 16px;flex-wrap:wrap}
+  .af-save-add{flex:1;min-width:0}
+  .af-save{flex:1;min-width:0}
+}
+.list-header-title{font-size:13px;font-weight:600;color:var(--text);letter-spacing:0.2px}
+.refresh-btn{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-mid);background:none;border:1px solid var(--line);border-radius:var(--radius-sm);padding:5px 10px;cursor:pointer;transition:all 0.15s;font-family:var(--sans)}
+.refresh-btn:hover{background:var(--surface);border-color:var(--line-2)}
+.refresh-btn svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.refresh-btn.spinning svg{animation:spin 0.8s linear infinite}
+
+/* Search */
+.search-row{position:relative;display:flex;align-items:center;padding:11px 18px;border-bottom:1px solid var(--line)}
+.search-icon{position:absolute;left:30px;width:15px;height:15px;fill:none;stroke:var(--text-muted);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.search-input{width:100%;font-family:var(--mono);font-size:13.5px;letter-spacing:0.3px;text-transform:uppercase;padding:8px 34px 8px 32px;border-radius:var(--radius-sm);border:1px solid var(--line-2);background:var(--surface);color:var(--text);outline:none;transition:border-color 0.15s,box-shadow 0.15s}
+.search-input::placeholder{font-family:var(--sans);font-size:12.5px;letter-spacing:0;text-transform:none;color:var(--text-muted)}
+.search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);background:#fff}
+.search-clear{position:absolute;right:26px;width:20px;height:20px;border-radius:3px;background:var(--line);border:none;cursor:pointer;display:none;align-items:center;justify-content:center;color:var(--text-mid);font-size:11px}
+.search-clear.visible{display:flex}
+.search-clear:hover{background:var(--line-2)}
+
+/* Filter tabs */
+.filter-tabs{display:flex;gap:0;padding:0 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.ftab{font-size:12.5px;font-weight:500;padding:11px 14px;border:none;border-bottom:2px solid transparent;background:none;color:var(--text-muted);cursor:pointer;transition:color 0.15s,border-color 0.15s;font-family:var(--sans);margin-bottom:-1px}
+.ftab:hover{color:var(--text-mid)}
+.ftab.active{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
+
+/* Dropdown filters */
+.filter-controls{display:flex;gap:10px;padding:11px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.fc-select{flex:1;min-width:130px;font-family:var(--sans);font-size:13px;color:var(--text);background:var(--surface);border:1px solid var(--line-2);border-radius:var(--radius-sm);padding:8px 30px 8px 11px;cursor:pointer;outline:none;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237B8896' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");background-repeat:no-repeat;background-position:right 10px center;transition:border-color 0.15s,box-shadow 0.15s}
+.fc-select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);background-color:#fff}
+.fc-select.set{border-color:var(--accent);color:var(--accent);font-weight:500}
+
+/* Right cluster + age badge */
+.c-right{display:flex;align-items:center;gap:10px;justify-content:flex-end}
+.c-age{font-family:var(--mono);font-size:10.5px;font-weight:500;padding:3px 7px;border-radius:3px;white-space:nowrap;flex-shrink:0;background:var(--surface);color:var(--text-mid);border:1px solid var(--line-2)}
+.c-age.warn{background:var(--bg-pending);color:var(--c-pending);border-color:rgba(169,120,28,0.25)}
+.c-age.late{background:var(--bg-blocked);color:var(--c-blocked);border-color:rgba(178,58,54,0.25)}
+
+/* Urgent row stripe + clickable */
+.campione-row{cursor:pointer}
+.campione-row.urgent{box-shadow:inset 3px 0 0 0 var(--c-blocked)}
+.campione-row.overdue{background:#FCF4F3}
+.campione-row.overdue:hover{background:#FBEEEC}
+.c-overdue-tag{font-size:9.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#fff;background:#C2504B;padding:3px 7px;border-radius:3px;white-space:nowrap;flex-shrink:0}
+/* Exit chip — prominent date on completed rows */
+.c-exitchip{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:11.5px;font-weight:600;color:#33833F;background:#E6F3E9;border:1px solid #C9E1CF;padding:4px 9px 4px 7px;border-radius:4px;white-space:nowrap;flex-shrink:0}
+.c-exitchip svg{width:11px;height:11px;fill:none;stroke:#33833F;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+/* Completed rows: lighter, no urgent border */
+.campione-row.completed-row{box-shadow:none;background:transparent}
+.campione-row.completed-row .c-codice{color:var(--text-mid)}
+.campione-row.completed-row .c-desc{color:var(--text-mid)}
+/* Day section header inside the Completed list */
+.day-section-header{font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--text-muted);padding:14px 18px 9px;background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:9px}
+.day-section-header .dsh-n{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--text-mid);background:#fff;border:1px solid var(--line);padding:1px 8px;border-radius:20px;letter-spacing:.2px}
+/* Completed-tab filter bar (Today / All) */
+.completed-filter-bar{display:flex;gap:6px;padding:13px 18px;border-bottom:1px solid var(--line);background:#fff}
+.cfb-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:9px 14px;font-family:var(--sans);font-size:13px;font-weight:600;color:var(--text-mid);background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);cursor:pointer}
+.cfb-btn:hover{background:#fff}
+.cfb-btn.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.cfb-n{font-family:var(--mono);font-size:12px;font-weight:600;background:#fff;color:var(--text-mid);padding:1px 8px;border-radius:20px;min-width:24px;text-align:center}
+.cfb-btn.active .cfb-n{background:rgba(255,255,255,.2);color:#fff}
+@media(max-width:600px){
+  .completed-filter-bar{padding:11px 14px}
+  .day-section-header{padding:11px 14px 7px}
+  .c-exitchip{font-size:11px;padding:3px 7px}
+}
+.campione-row:active{background:var(--accent-soft)}
+
+/* Completed collapsible section */
+.section-toggle{display:flex;align-items:center;gap:9px;width:100%;padding:11px 18px;background:var(--surface);border:none;border-top:1px solid var(--line);border-bottom:1px solid var(--line);cursor:pointer;font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:0.4px;text-transform:uppercase;color:var(--text-mid);transition:background 0.12s}
+.section-toggle:hover{background:#EEF1F4}
+.section-toggle .chev{width:13px;height:13px;fill:none;stroke:var(--text-muted);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform 0.18s}
+.section-toggle.open .chev{transform:rotate(90deg)}
+.section-toggle .cnt{color:var(--text-muted);font-weight:500}
+.section-note{padding:18px;text-align:center;color:var(--text-muted);font-size:12.5px}
+
+/* Rows */
+.campione-row{display:grid;grid-template-columns:140px 1fr auto;gap:14px;align-items:center;padding:13px 18px;border-bottom:1px solid var(--line);transition:background 0.1s}
+.campione-row:hover{background:#FAFBFC}
+.campione-row:last-child{border-bottom:none}
+.c-codice{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--text);letter-spacing:0.3px}
+.c-info{min-width:0}
+.c-desc{font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c-meta{font-size:11.5px;color:var(--text-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c-stamp{font-family:var(--mono);font-size:10.5px;color:var(--text-muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c-prio{font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;padding:3px 8px;border-radius:3px;white-space:nowrap;flex-shrink:0;border:1px solid transparent}
+.prio-urgente{background:var(--bg-blocked);color:var(--c-blocked);border-color:rgba(178,58,54,0.2)}
+.prio-normale{background:var(--surface);color:var(--text-mid);border-color:var(--line-2)}
+.prio-bassa{background:var(--bg-completed);color:var(--c-completed);border-color:rgba(46,125,91,0.2)}
+.c-stato{font-size:11px;font-weight:600;letter-spacing:0.2px;padding:4px 10px 4px 8px;border-radius:3px;white-space:nowrap;flex-shrink:0;display:inline-flex;align-items:center;gap:6px}
+.c-stato::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}
+.stato-attesa{background:var(--bg-pending);color:var(--c-pending)}
+.stato-lavorazione{background:var(--bg-progress);color:var(--c-progress)}
+.stato-completato{background:var(--bg-completed);color:var(--c-completed)}
+.stato-bloccato{background:var(--bg-blocked);color:var(--c-blocked)}
+.empty-state{padding:44px 24px;text-align:center;color:var(--text-muted);font-size:13px}
+.empty-state svg{width:34px;height:34px;stroke:var(--line-2);fill:none;stroke-width:1.5;display:block;margin:0 auto 12px}
+
+@media(max-width:900px){
+  .layout{grid-template-columns:1fr}
+  .col-left{position:static;max-height:none;overflow:visible;padding-right:0}
+  .campione-row{grid-template-columns:120px 1fr auto}
+  .c-prio{display:none}
+}
+@media(max-width:600px){
+  .topbar{padding:0 12px;height:54px}
+  .topbar-time,.sync-indicator{display:none}
+  .topbar-right{gap:8px}
+  .vt-alpha{display:none}
+  .vt-btn{padding:6px 9px;font-size:11.5px}
+  .main{padding:14px}
+  .stats-row{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .stat-card{padding:11px 10px}
+  .stat-value{font-size:21px}
+  .card{padding:14px}
+  .code-input{font-size:19px;padding:12px 40px 12px 12px}
+  .campione-row{grid-template-columns:96px 1fr auto;padding:11px 14px;gap:8px}
+  .list-header,.search-row{padding-left:14px;padding-right:14px}
+  .filter-tabs{padding:0 14px}
+  .c-codice{font-size:12px}
+  .c-desc{font-size:12px}
+}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="lang-wrap">
+      <button class="gear-btn" id="gear-btn" onclick="toggleLangMenu(event)" aria-label="Language">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+      <div class="lang-menu" id="lang-menu">
+        <div class="lang-menu-title" id="lang-menu-title">Language</div>
+        <button class="lang-opt" data-lang="en" onclick="setLang('en')"><span>🇬🇧</span> English</button>
+        <button class="lang-opt" data-lang="vi" onclick="setLang('vi')"><span>🇻🇳</span> Tiếng Việt</button>
+      </div>
+    </div>
+    <div class="topbar-brand">
+      <img class="brand-logo" src="https://www.sai-tex.com/cdn/shop/files/saitex-logo.svg?v=1720413942" alt="SAITEX"
+           onerror="this.style.display='none';document.getElementById('brand-fallback').style.display='inline'">
+      <span class="brand-fallback" id="brand-fallback">SAITEX</span>
+      <span class="brand-divider"></span>
+      <div class="brand-sub" id="brand-sub" data-i18n="brandSub">Real-time status updates</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="view-toggle" id="view-toggle">
+      <button class="vt-btn" id="vt-manager" onclick="setView('manager')" data-i18n="vManager">Manager</button>
+      <button class="vt-btn active" id="vt-operator" onclick="setView('operator')"><span id="vt-op-label">Operator</span></button>
+    </div>
+    <div class="sync-indicator">
+      <div class="sync-dot" id="sync-dot"></div>
+      <span id="sync-label">Connected</span>
+    </div>
+    <div class="topbar-time" id="clock">--:--</div>
+    <button class="lock-btn" id="lock-btn" onclick="lockManager()" title="Lock manager" style="display:none">
+      <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </button>
+    <a class="sheet-btn" id="sheet-btn" style="display:none"
+       href="https://docs.google.com/spreadsheets/d/1kTeqNTpEy8ffphI-mwx-YCXtc2NdhISsG2SL19F4kos/edit"
+       target="_blank" rel="noopener" aria-label="Open data sheet" title="Open data sheet">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+    </a>
+  </div>
+</div>
+
+<div class="main" id="manager-view" style="display:none">
+  <div class="stats-row">
+    <div class="stat-card s-attesa" onclick="setFilter('attesa')" title="Filter Pending">
+      <div class="stat-label" data-i18n="statPending">Pending</div>
+      <div class="stat-value" id="cnt-attesa">—</div>
+    </div>
+    <div class="stat-card s-lavorazione" onclick="setFilter('lavorazione')" title="Filter In progress">
+      <div class="stat-label" data-i18n="statProgress">In progress</div>
+      <div class="stat-value" id="cnt-lavorazione">—</div>
+    </div>
+    <div class="stat-card s-completato" onclick="setFilter('completato')" title="Filter Completed">
+      <div class="stat-label" data-i18n="statCompleted">Completed</div>
+      <div class="stat-value" id="cnt-completato">—</div>
+    </div>
+    <div class="stat-card s-bloccato" onclick="setFilter('bloccato')" title="Filter Blocked">
+      <div class="stat-label" data-i18n="statBlocked">Blocked</div>
+      <div class="stat-value" id="cnt-bloccato">—</div>
+    </div>
+    <div class="stat-card s-overdue" onclick="setFilter('overdue')" title="Filter Overdue">
+      <div class="stat-label" data-i18n="statOverdue">Overdue</div>
+      <div class="stat-value" id="cnt-overdue">—</div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="col-left">
+      <div class="card">
+        <div class="card-title" data-i18n="fabricCode">Fabric code</div>
+        <div class="input-wrap">
+          <input class="code-input" id="codice-input" type="text"
+            placeholder="e.g. S4456739"
+            autocomplete="off" autocorrect="off"
+            autocapitalize="characters" spellcheck="false"/>
+          <button class="clear-btn" id="clear-btn" aria-label="Clear">&#x2715;</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title" data-i18n="newStatus">New status</div>
+        <div class="stato-grid">
+          <button class="stato-btn k-lavorazione" data-stato="🔄 IN PROGRESS" data-key="lavorazione" onclick="selStato(this)">
+            <span class="s-emoji"></span><span class="s-label" data-i18n="stProgress">In progress</span>
+          </button>
+          <button class="stato-btn k-completato sel sel-completato" data-stato="✅ COMPLETED" data-key="completato" onclick="selStato(this)">
+            <span class="s-emoji"></span><span class="s-label" data-i18n="stCompleted">Completed</span>
+          </button>
+          <button class="stato-btn k-attesa" data-stato="⏳ PENDING" data-key="attesa" onclick="selStato(this)">
+            <span class="s-emoji"></span><span class="s-label" data-i18n="stPending">Pending</span>
+          </button>
+          <button class="stato-btn k-bloccato" data-stato="❌ BLOCKED" data-key="bloccato" onclick="selStato(this)">
+            <span class="s-emoji"></span><span class="s-label" data-i18n="stBlocked">Blocked</span>
+          </button>
+          <button class="stato-btn wide k-amata" data-stato="Sent to Amata" data-key="amata" onclick="selStato(this)">
+            <span class="s-emoji"></span><span class="s-label" data-i18n="stAmata">Sent to Amata</span>
+          </button>
+        </div>
+      </div>
+
+      <button class="send-btn" id="send-btn" onclick="inviaAggiornamento()">
+        <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        <span id="btn-label">Update Google Sheets</span>
+        <div class="spinner" id="spinner"></div>
+      </button>
+
+      <div id="result-area"></div>
+
+      <div class="card plan-card">
+        <div class="card-title" data-i18n="planTitle">Shift plan</div>
+        <div id="plan-body"></div>
+      </div>
+
+      <div class="card msg-card">
+        <div class="card-title">📢 <span data-i18n="mgrMsgTitle">Messages to operator</span></div>
+        <div id="mgr-msg-list" class="mgr-msg-list"></div>
+        <div class="mgr-msg-input-row">
+          <input class="mgr-msg-input" id="mgr-msg-input" type="text" maxlength="280"
+                 placeholder="" onkeydown="if(event.key==='Enter')addManagerMessage()">
+          <button class="mgr-msg-send" onclick="addManagerMessage()" data-i18n="mgrMsgSend">Send</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-right">
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="list-header">
+          <div class="list-header-title"><span data-i18n="samplesIn">Samples in tracker</span> <span id="list-count" style="color:var(--text-muted);font-weight:400;font-size:13px"></span></div>
+          <div class="list-header-actions">
+            <button class="new-btn" id="new-btn" onclick="openAddForm()">
+              <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span data-i18n="newSample">New sample</span>
+            </button>
+            <button class="refresh-btn" id="export-btn" onclick="exportXlsx()">
+              <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span data-i18n="exportBtn">Export</span>
+            </button>
+            <button class="refresh-btn" id="refresh-btn" onclick="loadCampioni()">
+              <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              <span data-i18n="refresh">Refresh</span>
+            </button>
+          </div>
+        </div>
+        <div class="search-row">
+          <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="search-input" id="search-input" type="text"
+            placeholder="Search by code…"
+            autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false"/>
+          <button class="search-clear" id="search-clear" aria-label="Clear search">&#x2715;</button>
+        </div>
+        <div class="filter-controls">
+          <select class="fc-select" id="type-filter"><option value="">All types</option></select>
+          <select class="fc-select" id="brand-filter"><option value="">All brands</option></select>
+          <select class="fc-select" id="recipe-filter"><option value="" data-i18n="allRecipes">All recipes</option></select>
+        </div>
+        <div class="filter-tabs" id="filter-tabs">
+          <button class="ftab active" data-f="tutti" onclick="setFilter('tutti')" data-i18n="fAll">All</button>
+          <button class="ftab" data-f="attesa" onclick="setFilter('attesa')" data-i18n="fPending">Pending</button>
+          <button class="ftab" data-f="lavorazione" onclick="setFilter('lavorazione')" data-i18n="fProgress">In progress</button>
+          <button class="ftab" data-f="completato" onclick="setFilter('completato')" data-i18n="fCompleted">Completed</button>
+          <button class="ftab" data-f="bloccato" onclick="setFilter('bloccato')" data-i18n="fBlocked">Blocked</button>
+        </div>
+        <div id="campioni-list">
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Loading samples...
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="main op-main" id="operator-view">
+  <div class="op-banner" id="op-banner">
+    <div class="ub-icon">⚠</div>
+    <div class="ub-body">
+      <div class="ub-title" id="op-ban-title">New urgent sample</div>
+      <div class="ub-codes" id="op-ban-codes"></div>
+    </div>
+    <button class="ub-close" onclick="dismissOpBanner()">&#x2715;</button>
+  </div>
+  <div class="op-search">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input id="op-search-input" type="text" placeholder="Find a code…" autocomplete="off" autocapitalize="characters" spellcheck="false">
+  </div>
+  <button class="op-push-banner" id="op-push-banner" onclick="enablePushNotifications()" style="display:none">
+    <span class="op-push-icon">🔔</span><span data-i18n="pushBannerText">Enable notifications</span>
+  </button>
+  <button class="op-msg-banner" id="op-msg-banner" onclick="reopenMessages()" style="display:none"></button>
+  <div id="op-content"></div>
+</div>
+
+<div class="pin-overlay" id="pin-overlay">
+  <div class="pin-dialog">
+    <div class="pin-icon">🔒</div>
+    <div class="pin-title" data-i18n="pinTitle">Manager Access</div>
+    <div class="pin-sub" data-i18n="pinSub">Enter your PIN to continue</div>
+    <input class="pin-input" id="pin-input" type="password" inputmode="numeric"
+           maxlength="4" placeholder="····" autocomplete="off"
+           oninput="this.value=this.value.replace(/\D/g,'')"
+           onkeydown="if(event.key==='Enter')checkPin()">
+    <div class="pin-error" id="pin-error"></div>
+    <div class="pin-actions">
+      <button class="pin-cancel" onclick="closePinModal()" data-i18n="pinCancel">Cancel</button>
+      <button class="pin-ok" onclick="checkPin()" data-i18n="pinConfirm">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Fullscreen Shift Plan editor -->
+<div class="plan-editor" id="plan-editor">
+  <div class="plan-editor-bar">
+    <div class="plan-editor-title">📋 <span data-i18n="planEditorTitle">Shift Plan Editor</span></div>
+    <div class="plan-editor-actions">
+      <button class="pe-cancel" onclick="closePlanEditor()" data-i18n="pinCancel">Cancel</button>
+      <button class="pe-save" onclick="savePlanEditor()" data-i18n="planSave">Save plan</button>
+    </div>
+  </div>
+  <div class="plan-editor-body">
+    <div class="plan-editor-col">
+      <div id="plan-editor-pinned"></div>
+      <div id="plan-editor-groups"></div>
+    </div>
+    <div class="plan-editor-aside">
+      <div class="plan-cmd-card">
+        <div class="plan-cmd-title">⚡ <span data-i18n="cmdTitle">Quick command</span></div>
+        <div class="plan-cmd-help" data-i18n="cmdHelp">Type a command and press Enter</div>
+        <input class="plan-cmd-input" id="plan-cmd-input" type="text"
+               placeholder="pin 15832 · move group &quot;Maldives Blue&quot; to 1"
+               onkeydown="if(event.key==='Enter')runPlanCommand()">
+        <div class="plan-cmd-msg" id="plan-cmd-msg"></div>
+        <div class="plan-cmd-examples">
+          <div class="cmd-ex-title" data-i18n="cmdExamples">Examples</div>
+          <code>pin 15832</code>
+          <code>pin 15832 hanger celestial</code>
+          <code>unpin 15832</code>
+          <code>move group "Maldives Blue" to 1</code>
+          <code>clear pins</code>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Operator notification: pinned by manager -->
+<div class="pin-notice" id="pin-notice">
+  <div class="pin-notice-dialog">
+    <div class="pin-notice-icon">📌</div>
+    <div class="pin-notice-title" data-i18n="pinNoticeTitle">Pinned by manager</div>
+    <div class="pin-notice-sub" data-i18n="pinNoticeSub">Wash these samples first.</div>
+    <div class="pin-notice-body" id="pin-notice-body"></div>
+    <button class="pin-notice-ok" onclick="closePinNoticeModal()">OK</button>
+  </div>
+</div>
+
+<!-- New Sample form (manager fast entry) -->
+<div class="add-form" id="add-form">
+  <div class="add-form-bar">
+    <div class="add-form-title">＋ <span data-i18n="afTitle">New sample</span></div>
+    <button class="af-close" onclick="closeAddForm()" aria-label="Close">&#x2715;</button>
+  </div>
+  <div class="add-form-body">
+    <div class="af-row">
+      <label class="af-field af-full">
+        <span class="af-lbl" data-i18n="afCode">Fabric code *</span>
+        <input class="af-input" id="af-code" type="text" autocomplete="off" oninput="addDupConfirmCode='';var w=document.getElementById('af-dup-warn');if(w)w.style.display='none';">
+      </label>
+    </div>
+    <div class="af-row">
+      <label class="af-field af-full">
+        <span class="af-lbl" data-i18n="afDesc">Fabric description</span>
+        <input class="af-input" id="af-desc" type="text" autocomplete="off">
+      </label>
+    </div>
+    <div class="af-row">
+      <label class="af-field">
+        <span class="af-lbl" data-i18n="afBrand">Brand</span>
+        <input class="af-input" id="af-brand" type="text" list="dl-brands" autocomplete="off">
+        <datalist id="dl-brands"></datalist>
+      </label>
+      <label class="af-field">
+        <span class="af-lbl" data-i18n="afType">Sample type</span>
+        <input class="af-input" id="af-type" type="text" list="dl-types" autocomplete="off">
+        <datalist id="dl-types"></datalist>
+      </label>
+    </div>
+    <div class="af-row">
+      <label class="af-field af-full">
+        <span class="af-lbl" data-i18n="afRecipe">Wash recipe</span>
+        <input class="af-input" id="af-recipe" type="text" list="dl-recipes" autocomplete="off">
+        <datalist id="dl-recipes"></datalist>
+      </label>
+    </div>
+    <div class="af-row">
+      <label class="af-field">
+        <span class="af-lbl" data-i18n="afQty">Quantity (pcs)</span>
+        <input class="af-input" id="af-qty" type="number" min="1" autocomplete="off">
+      </label>
+      <label class="af-field">
+        <span class="af-lbl" data-i18n="afPriority">Priority</span>
+        <select class="af-input" id="af-prio" onchange="onPrioChange()">
+          <option value="normale">🟡 Normal</option>
+          <option value="urgente">🔴 Urgent</option>
+          <option value="bassa">🟢 Low</option>
+        </select>
+      </label>
+    </div>
+    <div class="af-row">
+      <label class="af-field">
+        <span class="af-lbl" data-i18n="afRequestedBy">Requested by</span>
+        <input class="af-input" id="af-by" type="text" list="dl-by" autocomplete="off">
+        <datalist id="dl-by"></datalist>
+      </label>
+      <label class="af-field">
+        <span class="af-lbl" data-i18n="afDateRequested">Date requested (deadline)</span>
+        <input class="af-input" id="af-date-req" type="date">
+      </label>
+    </div>
+    <label class="af-pin" id="af-pin-row">
+      <input type="checkbox" id="af-pin">
+      <span><span class="af-pin-icon">📌</span> <span data-i18n="afPinLabel">Pin to top of shift plan</span></span>
+    </label>
+    <div class="af-dup-warn" id="af-dup-warn" style="display:none"></div>
+    <div class="af-msg" id="af-msg"></div>
+  </div>
+  <div class="add-form-actions">
+    <button class="af-cancel" onclick="closeAddForm()" data-i18n="pinCancel">Cancel</button>
+    <button class="af-save-add" onclick="submitAdd(true)" data-i18n="afSaveAdd">Save &amp; add another</button>
+    <button class="af-save" onclick="submitAdd(false)" data-i18n="afSave">Save</button>
+  </div>
+</div>
+
+<!-- Operator notification: messages from manager -->
+<div class="pin-notice" id="msg-modal">
+  <div class="pin-notice-dialog">
+    <div class="pin-notice-icon">📢</div>
+    <div class="pin-notice-title" data-i18n="msgModalTitle">Messages from manager</div>
+    <div class="pin-notice-sub" data-i18n="msgModalSub">Please read before starting your shift.</div>
+    <div class="pin-notice-body" id="msg-modal-body"></div>
+    <button class="pin-notice-ok" onclick="closeMessagesModal()" data-i18n="msgModalOk">OK, got it</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  CONFIGURATION — paste your Web App Script URL here
+// ═══════════════════════════════════════════════════════════════
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx9-1On8jG5gYAAYdjAXRlXZ0gvsda01VPtzIpDqQN6SRnG7SdUPqNZeX0hsX288aCJ/exec';
+
+// ─── MANAGER PIN ───────────────────────────────────────────────────────────
+// Change this to your preferred 4-digit PIN before deploying.
+const MANAGER_PIN = '1234';
+// ─────────────────────────────────────────────────────────────────────────
+
+// ─── PUSH NOTIFICATIONS (separate Node server, see /push-server) ──────────
+// Leave PUSH_SERVER_URL empty ('') to disable push entirely — the rest of
+// the app works exactly as before. Fill these in after deploying push-server
+// (see push-server/README.md for the full setup).
+const PUSH_SERVER_URL = '';        // e.g. 'https://saitex-push.onrender.com' (no trailing slash)
+const VAPID_PUBLIC_KEY = '';       // public key printed by `npm run generate-vapid-keys`
+const PUSH_SECRET = '';            // must match PUSH_SECRET in push-server/.env
+const PUSH_OPERATOR_ID = 'operator-1'; // identifies this operator's device on the push server
+// ─────────────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+
+let allCampioni = [];
+let activeFilter = 'tutti';
+let searchQuery = '';
+let typeFilter = '';
+let brandFilter = '';
+let recipeFilter = '';
+let showCompleted = false;
+let showOnlyToday = false;     // toggle on the Completed tab
+let statoSelezionato = '✅ COMPLETED';
+let statoKey = 'completato';
+
+// ═══════════════════════════════════════════════════════════════
+//  TRANSLATIONS (EN / VI)
+// ═══════════════════════════════════════════════════════════════
+const I18N = {
+  en: {
+    brandSub:'Real-time status updates',
+    statPending:'Pending', statProgress:'In progress', statCompleted:'Completed', statBlocked:'Blocked',
+    fabricCode:'Fabric code', placeholder:'e.g. S4456739',
+    newStatus:'New status',
+    stProgress:'In progress', stCompleted:'Completed', stPending:'Pending', stBlocked:'Blocked', stAmata:'Sent to Amata',
+    updateBtn:'Update Google Sheets', updating:'Updating...',
+    samplesIn:'Samples in tracker', refresh:'Refresh', exportBtn:'Export',
+    statOverdue:'Overdue', overdueTag:'Overdue',
+    planTitle:'Shift plan', planAuto:'Auto', planManual:'Manual',
+    planAutoNote:'The app decides the order automatically (urgency, recipe, waiting time). The operator sees this sequence.',
+    planManualNote:'You set the order by recipe group plus individual pins. Open the editor to arrange.',
+    planEmpty:'Nothing to plan — no pending samples.', planSave:'Save plan', planSaved:'Plan saved',
+    planBy:'Order set by manager', planByAuto:'Automatic order',
+    planOpenEditor:'Open plan editor', planPinned:'Pinned', planGroups:'Recipe groups', planSamples:'samples', planPin:'Pin to top',
+    planEditorTitle:'Shift Plan Editor', edNoPinned:'No samples pinned. Expand a group and tap Pin to add one.',
+    pinNoticeTitle:'Pinned by manager', pinNoticeSub:'Wash these samples first.',
+    cmdTitle:'Quick command', cmdHelp:'Type a command and press Enter', cmdExamples:'Examples',
+    cmdPinned:'Pinned', cmdUnpinned:'Unpinned', cmdMovedGroup:'Moved group "{name}" to position {n}',
+    cmdNoMatch:'No match for', cmdAmbiguous:'{n} samples match — be more specific (add recipe or type)',
+    cmdBadPos:'Position out of range', cmdUnknown:'Command not recognised', cmdClearedPins:'All pins cleared',
+    fAll:'All', fPending:'Pending', fProgress:'In progress', fCompleted:'Completed', fBlocked:'Blocked',
+    loading:'Loading samples...', noSamples:'No samples in this category.',
+    connErrList:'Connection error. Check that the Google script is published correctly.',
+    enterCode:'Enter the fabric code', fieldEmpty:'The field is empty.',
+    sheetUpdated:'Sheet updated!',
+    codeNotFound:'Code not found', notInTracker:'is not in the tracker. Check the code.',
+    multiMatchTitle:'Multiple matches', multiMatchSub:'There are {n} samples with this code (different recipes or types). Click the specific row in the list to pick the right one.',
+    today:'Today', yesterday:'Yesterday',
+    bucketToday:'Today', bucketYesterday:'Yesterday', bucketThisWeek:'This week', bucketLastWeek:'Last week', bucketEarlier:'Earlier', bucketUnknown:'Date unknown',
+    allCompleted:'All completed', noCompletedToday:'Nothing completed today yet.',
+    newSample:'New sample',
+    afTitle:'New sample', afCode:'Fabric code *', afDesc:'Fabric description', afBrand:'Brand', afType:'Sample type',
+    afRecipe:'Wash recipe', afQty:'Quantity (pcs)', afPriority:'Priority', afRequestedBy:'Requested by', afDateRequested:'Date requested (deadline)',
+    afPinLabel:'Pin to top of shift plan', afSave:'Save', afSaveAdd:'Save & add another',
+    afNoCode:'Fabric code is required.', afSaving:'Saving…', afSaved:'Saved', afErr:'Save failed — try again.',
+    afDupTitle:'This code already exists ({n})', afDupConfirm:'Add anyway', afDupCancel:'Cancel',
+    mgrMsgTitle:'Messages to operator', mgrMsgEmpty:'No active messages.', mgrMsgSend:'Send',
+    mgrMsgPlaceholder:'Write a note for the operator…', mgrMsgOne:'message from manager', mgrMsgMany:'messages from manager',
+    msgModalTitle:'Messages from manager', msgModalSub:'Please read before starting your shift.', msgModalOk:'OK, got it',
+    connErr:'Connection error', checkConn:'Check your connection and the Google script.',
+    syncConnected:'Connected', syncUpdating:'Updating...', syncErr:'Connection error', syncSynced:'Synced',
+    prioUrgent:'Urgent', prioNormal:'Normal', prioLow:'Low',
+    lblPending:'Pending', lblProgress:'In progress', lblCompleted:'Completed', lblBlocked:'Blocked',
+    updated:'Updated:', exit:'Exit:', sentAmata:'Sent to Amata', pcs:'pcs', language:'Language',
+    searchCode:'Search by code…', noMatch:'No code matches your search.',
+    allTypes:'All types', allBrands:'All brands', allRecipes:'All recipes', completedHdr:'Completed', noActive:'No active samples.',
+    dayShort:'d', daysWaitingTip:'days waiting', tapHint:'Tap a row to load its code',
+    vManager:'Manager', vOperator:'Operator',
+    pinTitle:'Manager Access', pinSub:'Enter your PIN to continue',
+    pinWrong:'Incorrect PIN — try again', pinConfirm:'Confirm', pinCancel:'Cancel',
+    opUrgentNow:'Urgent now', opToDo:'To do', opDoneToday:'Done today',
+    opStart:'Start', opDone:'Done', opResume:'Resume', opBlock:'Block',
+    opNothing:'Nothing to do right now.', opNoMatch:'No code matches.',
+    opFind:'Find a code…', opAlpha:'Alpha preview — actions are not saved.',
+    opNewUrgent:'New urgent sample', opNotSaved:'Alpha — not saved',
+    opSaved:'Saved', opErr:'Update failed — try again',
+    pushBannerText:'Enable notifications', pushEnabled:'Notifications enabled',
+    pushPinTitle:'📌 New pinned sample', pushPinBody:'Wash first:',
+    pushMsgTitle:'📢 New message from manager',
+    opNoProgress:'Nothing in the wash right now.', opNoDone:'Nothing completed today yet.',
+    opGroupRecipe:'Recipe', opNoRecipe:'No recipe',
+    opPickRecipe:'Filter by recipe', opAllRecipes:'All recipes',
+    opUrgentOther:'Urgent — other recipe'
+  },
+  vi: {
+    brandSub:'Cập nhật trạng thái theo thời gian thực',
+    statPending:'Chờ xử lý', statProgress:'Đang xử lý', statCompleted:'Hoàn thành', statBlocked:'Bị chặn',
+    fabricCode:'Mã vải', placeholder:'vd. S4456739',
+    newStatus:'Trạng thái mới',
+    stProgress:'Đang xử lý', stCompleted:'Hoàn thành', stPending:'Chờ xử lý', stBlocked:'Bị chặn', stAmata:'Đã gửi Amata',
+    updateBtn:'Cập nhật Google Sheets', updating:'Đang cập nhật...',
+    samplesIn:'Mẫu trong bảng', refresh:'Làm mới', exportBtn:'Xuất Excel',
+    statOverdue:'Quá hạn', overdueTag:'Quá hạn',
+    planTitle:'Kế hoạch ca', planAuto:'Tự động', planManual:'Thủ công',
+    planAutoNote:'Ứng dụng tự quyết định thứ tự (khẩn cấp, công thức, thời gian chờ). Người vận hành thấy thứ tự này.',
+    planManualNote:'Bạn đặt thứ tự theo nhóm công thức và các mẫu được ghim. Mở trình chỉnh sửa để sắp xếp.',
+    planEmpty:'Không có gì để lên kế hoạch — không có mẫu chờ.', planSave:'Lưu kế hoạch', planSaved:'Đã lưu kế hoạch',
+    planBy:'Thứ tự do quản lý đặt', planByAuto:'Thứ tự tự động',
+    planOpenEditor:'Mở trình chỉnh sửa', planPinned:'Đã ghim', planGroups:'Nhóm công thức', planSamples:'mẫu', planPin:'Ghim lên đầu',
+    planEditorTitle:'Trình chỉnh sửa kế hoạch ca', edNoPinned:'Chưa ghim mẫu nào. Mở rộng một nhóm và bấm Ghim để thêm.',
+    pinNoticeTitle:'Được quản lý ghim', pinNoticeSub:'Giặt các mẫu này trước.',
+    cmdTitle:'Lệnh nhanh', cmdHelp:'Gõ lệnh rồi nhấn Enter', cmdExamples:'Ví dụ',
+    cmdPinned:'Đã ghim', cmdUnpinned:'Đã bỏ ghim', cmdMovedGroup:'Đã chuyển nhóm "{name}" tới vị trí {n}',
+    cmdNoMatch:'Không khớp', cmdAmbiguous:'{n} mẫu khớp — cần cụ thể hơn (thêm công thức hoặc loại)',
+    cmdBadPos:'Vị trí không hợp lệ', cmdUnknown:'Lệnh không được nhận diện', cmdClearedPins:'Đã bỏ tất cả ghim',
+    fAll:'Tất cả', fPending:'Chờ xử lý', fProgress:'Đang xử lý', fCompleted:'Hoàn thành', fBlocked:'Bị chặn',
+    loading:'Đang tải mẫu...', noSamples:'Không có mẫu trong mục này.',
+    connErrList:'Lỗi kết nối. Kiểm tra rằng Google script đã được xuất bản đúng cách.',
+    enterCode:'Nhập mã vải', fieldEmpty:'Ô đang trống.',
+    sheetUpdated:'Đã cập nhật bảng!',
+    codeNotFound:'Không tìm thấy mã', notInTracker:'không có trong bảng theo dõi. Kiểm tra lại mã.',
+    multiMatchTitle:'Nhiều kết quả', multiMatchSub:'Có {n} mẫu cùng mã này (công thức hoặc loại khác nhau). Bấm vào hàng cụ thể trong danh sách để chọn đúng.',
+    today:'Hôm nay', yesterday:'Hôm qua',
+    bucketToday:'Hôm nay', bucketYesterday:'Hôm qua', bucketThisWeek:'Tuần này', bucketLastWeek:'Tuần trước', bucketEarlier:'Cũ hơn', bucketUnknown:'Không rõ ngày',
+    allCompleted:'Tất cả hoàn thành', noCompletedToday:'Chưa có mẫu nào hoàn thành hôm nay.',
+    newSample:'Thêm mẫu',
+    afTitle:'Mẫu mới', afCode:'Mã vải *', afDesc:'Mô tả vải', afBrand:'Thương hiệu', afType:'Loại mẫu',
+    afRecipe:'Công thức giặt', afQty:'Số lượng (pcs)', afPriority:'Ưu tiên', afRequestedBy:'Người yêu cầu', afDateRequested:'Ngày cần (hạn chót)',
+    afPinLabel:'Ghim lên đầu kế hoạch', afSave:'Lưu', afSaveAdd:'Lưu & thêm tiếp',
+    afNoCode:'Bắt buộc nhập mã vải.', afSaving:'Đang lưu…', afSaved:'Đã lưu', afErr:'Lưu thất bại — thử lại.',
+    afDupTitle:'Mã này đã tồn tại ({n})', afDupConfirm:'Vẫn thêm', afDupCancel:'Hủy',
+    mgrMsgTitle:'Tin nhắn cho người vận hành', mgrMsgEmpty:'Không có tin nhắn nào.', mgrMsgSend:'Gửi',
+    mgrMsgPlaceholder:'Viết ghi chú cho người vận hành…', mgrMsgOne:'tin nhắn từ quản lý', mgrMsgMany:'tin nhắn từ quản lý',
+    msgModalTitle:'Tin nhắn từ quản lý', msgModalSub:'Vui lòng đọc trước khi bắt đầu ca.', msgModalOk:'Đã hiểu',
+    connErr:'Lỗi kết nối', checkConn:'Kiểm tra kết nối và Google script.',
+    syncConnected:'Đã kết nối', syncUpdating:'Đang cập nhật...', syncErr:'Lỗi kết nối', syncSynced:'Đã đồng bộ',
+    prioUrgent:'Khẩn cấp', prioNormal:'Bình thường', prioLow:'Thấp',
+    lblPending:'Chờ xử lý', lblProgress:'Đang xử lý', lblCompleted:'Hoàn thành', lblBlocked:'Bị chặn',
+    updated:'Cập nhật:', exit:'Xuất:', sentAmata:'Đã gửi Amata', pcs:'cái', language:'Ngôn ngữ',
+    searchCode:'Tìm theo mã…', noMatch:'Không có mã nào khớp với tìm kiếm.',
+    allTypes:'Tất cả loại', allBrands:'Tất cả thương hiệu', allRecipes:'Tất cả công thức', completedHdr:'Hoàn thành', noActive:'Không có mẫu đang xử lý.',
+    dayShort:'ng', daysWaitingTip:'ngày chờ', tapHint:'Chạm vào dòng để nạp mã',
+    vManager:'Quản lý', vOperator:'Vận hành',
+    pinTitle:'Truy cập quản lý', pinSub:'Nhập mã PIN để tiếp tục',
+    pinWrong:'Mã PIN sai — thử lại', pinConfirm:'Xác nhận', pinCancel:'Hủy',
+    opUrgentNow:'Khẩn cấp', opToDo:'Cần làm', opDoneToday:'Xong hôm nay',
+    opStart:'Bắt đầu', opDone:'Xong', opResume:'Tiếp tục', opBlock:'Chặn',
+    opNothing:'Hiện không có việc cần làm.', opNoMatch:'Không tìm thấy mã.',
+    opFind:'Tìm mã…', opAlpha:'Bản thử — thao tác không được lưu.',
+    opNewUrgent:'Mẫu khẩn cấp mới', opNotSaved:'Bản thử — chưa lưu',
+    opSaved:'Đã lưu', opErr:'Cập nhật thất bại — thử lại',
+    pushBannerText:'Bật thông báo', pushEnabled:'Đã bật thông báo',
+    pushPinTitle:'📌 Mẫu mới được ghim', pushPinBody:'Giặt trước:',
+    pushMsgTitle:'📢 Tin nhắn mới từ quản lý',
+    opNoProgress:'Hiện không có mẫu đang giặt.', opNoDone:'Chưa có mẫu hoàn thành hôm nay.',
+    opGroupRecipe:'Công thức', opNoRecipe:'Chưa có công thức',
+    opPickRecipe:'Lọc theo công thức', opAllRecipes:'Tất cả công thức',
+    opUrgentOther:'Khẩn cấp — công thức khác'
+  }
+};
+
+let lang = 'en';
+try { var saved = localStorage.getItem('saitex_lang'); if(saved && I18N[saved]) lang = saved; } catch(e) {}
+
+function t(key) { return (I18N[lang] && I18N[lang][key] !== undefined) ? I18N[lang][key] : (I18N.en[key] || key); }
+
+var PRIO_LABEL = { urgente:'prioUrgent', normale:'prioNormal', bassa:'prioLow' };
+var STATO_LABEL = { attesa:'lblPending', lavorazione:'lblProgress', completato:'lblCompleted', bloccato:'lblBlocked' };
+
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i18n]').forEach(function(el) {
+    el.textContent = t(el.getAttribute('data-i18n'));
+  });
+  document.getElementById('codice-input').placeholder = t('placeholder');
+  document.getElementById('search-input').placeholder = t('searchCode');
+  document.getElementById('vt-op-label').textContent = t('vOperator');
+  document.getElementById('op-search-input').placeholder = t('opFind');
+  document.getElementById('lang-menu-title').textContent = t('language');
+  var mi = document.getElementById('mgr-msg-input'); if(mi) mi.placeholder = t('mgrMsgPlaceholder');
+  document.querySelectorAll('.lang-opt').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+  setBtnLoading(false);
+  setSyncState(lastSyncState);
+  populateFilters();
+  renderCampioni();
+  renderManagerMessages();
+  updateMsgBanner();
+  if(currentView === 'operator') renderOperator();
+}
+
+function setLang(l) {
+  if(!I18N[l]) return;
+  lang = l;
+  try { localStorage.setItem('saitex_lang', l); } catch(e) {}
+  document.getElementById('lang-menu').classList.remove('open');
+  applyLang();
+}
+
+function toggleLangMenu(e) {
+  e.stopPropagation();
+  document.getElementById('lang-menu').classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+  var w = document.querySelector('.lang-wrap');
+  if(w && !w.contains(e.target)) document.getElementById('lang-menu').classList.remove('open');
+});
+
+// Clock
+setInterval(function() {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}, 1000);
+
+// Input handlers
+var inp = document.getElementById('codice-input');
+var clearBtn = document.getElementById('clear-btn');
+inp.addEventListener('input', function() {
+  selectedReq = null;     // typing breaks the row link
+  clearBtn.classList.toggle('visible', inp.value.length > 0);
+});
+inp.addEventListener('keydown', function(e) {
+  if(e.key === 'Enter') inviaAggiornamento();
+});
+clearBtn.addEventListener('click', function() {
+  inp.value = '';
+  selectedReq = null;
+  clearBtn.classList.remove('visible');
+  inp.focus();
+});
+
+// Search-by-code handlers
+var searchInp = document.getElementById('search-input');
+var searchClear = document.getElementById('search-clear');
+function normSearch(s) { return String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); }
+searchInp.addEventListener('input', function() {
+  searchQuery = normSearch(searchInp.value);
+  searchClear.classList.toggle('visible', searchInp.value.length > 0);
+  renderCampioni();
+});
+searchClear.addEventListener('click', function() {
+  searchInp.value = '';
+  searchQuery = '';
+  searchClear.classList.remove('visible');
+  renderCampioni();
+  searchInp.focus();
+});
+
+// Type & Brand dropdown filters (populated dynamically from the data)
+function populateFilters() {
+  var types = {}, brands = {}, recipes = {};
+  allCampioni.forEach(function(c) {
+    if(c.tipo) types[c.tipo] = 1;
+    if(c.cliente) brands[c.cliente] = 1;
+    if(c.ricetta) recipes[c.ricetta] = 1;
+  });
+  fillSelect('type-filter', Object.keys(types).sort(), typeFilter, t('allTypes'));
+  fillSelect('brand-filter', Object.keys(brands).sort(), brandFilter, t('allBrands'));
+  fillSelect('recipe-filter', Object.keys(recipes).sort(), recipeFilter, t('allRecipes'));
+}
+function fillSelect(id, values, current, allLabel) {
+  var sel = document.getElementById(id);
+  if(!sel) return;
+  var html = '<option value="">' + allLabel + '</option>';
+  values.forEach(function(v) {
+    html += '<option value="' + v.replace(/"/g,'&quot;') + '"' + (v === current ? ' selected' : '') + '>' + v + '</option>';
+  });
+  sel.innerHTML = html;
+  sel.value = current || '';
+  sel.classList.toggle('set', !!current);
+}
+var typeSel = document.getElementById('type-filter');
+var brandSel = document.getElementById('brand-filter');
+var recipeSel = document.getElementById('recipe-filter');
+typeSel.addEventListener('change', function() {
+  typeFilter = typeSel.value;
+  typeSel.classList.toggle('set', !!typeFilter);
+  renderCampioni();
+});
+brandSel.addEventListener('change', function() {
+  brandFilter = brandSel.value;
+  brandSel.classList.toggle('set', !!brandFilter);
+  renderCampioni();
+});
+recipeSel.addEventListener('change', function() {
+  recipeFilter = recipeSel.value;
+  recipeSel.classList.toggle('set', !!recipeFilter);
+  renderCampioni();
+});
+
+// Tap a list row to load its code into the update panel
+let selectedReq = null;
+function pickRow(req, code) {
+  selectedReq = req || null;
+  inp.value = code;
+  clearBtn.classList.add('visible');
+  inp.focus();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function pickCodice(code) { pickRow(null, code); }    // legacy alias
+
+// Collapsible completed section
+function toggleCompleted() {
+  showCompleted = !showCompleted;
+  renderCampioni();
+}
+
+// Parse 'yyyy-MM-dd' (or a leading date in that form) into a Date
+function parseISODate(s) {
+  if(!s) return null;
+  var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s).trim());
+  if(!m) return null;
+  var d = new Date(+m[1], +m[2]-1, +m[3]);
+  return isNaN(d.getTime()) ? null : d;
+}
+// Whole days a still-open sample has been waiting (null if unknown/completed)
+function daysWaiting(c) {
+  if(c.statoKey === 'completato') return null;
+  var d = parseISODate(c.dataRicevuto) || parseISODate(c.dataRichiesta);
+  if(!d) return null;
+  var diff = Math.floor((Date.now() - d.getTime()) / 86400000);
+  return diff >= 0 ? diff : null;
+}
+
+function selStato(btn) {
+  document.querySelectorAll('.stato-btn').forEach(function(b) {
+    b.classList.remove('sel','sel-lavorazione','sel-completato','sel-attesa','sel-bloccato','sel-amata');
+  });
+  statoSelezionato = btn.dataset.stato;
+  statoKey = btn.dataset.key;
+  btn.classList.add('sel', 'sel-' + statoKey);
+}
+
+function setFilter(f) {
+  activeFilter = f;
+  document.querySelectorAll('.ftab').forEach(function(t) {
+    t.classList.toggle('active', t.dataset.f === f);
+  });
+  document.querySelectorAll('.stat-card').forEach(function(c) {
+    c.classList.remove('active-filter');
+    if(c.classList.contains('s-' + f)) c.classList.add('active-filter');
+  });
+  renderCampioni();
+}
+
+// ─── SHIFT PLAN ─────────────────────────────────────────────────────────────
+let planMode = 'auto';           // 'auto' = algorithm decides · 'manual' = manager decides
+let planPinnedReqs = [];         // REQ#s pinned to the very top, in pin order
+let planGroupOrder = [];         // recipe-group names in chosen sequence
+let editorPinned = [];           // working copy used inside the fullscreen editor
+let editorGroups = [];           // working copy used inside the fullscreen editor
+let managerMessages = [];        // bulletin-board notes from manager to operator
+
+function getTodoSamples(){
+  return allCampioni.filter(function(c){ return c.statoKey==='attesa' || c.statoKey==='bloccato'; });
+}
+function recipeKey(c){ return ((c && c.ricetta) || '').trim() || '—'; }
+
+// Produce the final operator-visible to-do order from the current plan state.
+function planOperatorTodo(todoList){
+  if(planMode !== 'manual') return todoList.slice().sort(opSort);
+  var byReq={}; todoList.forEach(function(c){ if(c.req) byReq[c.req]=c; });
+  var pinned = (planPinnedReqs||[]).map(function(r){ return byReq[r]; }).filter(Boolean);
+  var pinnedSet={}; pinned.forEach(function(c){ pinnedSet[c.req] = true; });
+  var grouped = {};
+  todoList.forEach(function(c){
+    if(pinnedSet[c.req]) return;
+    var k = recipeKey(c); (grouped[k] = grouped[k] || []).push(c);
+  });
+  // Group order: saved order first (still-valid), then any new group alphabetically
+  var keys=[]; var seen={};
+  (planGroupOrder||[]).forEach(function(k){ if(grouped[k] && !seen[k]){ keys.push(k); seen[k]=true; } });
+  Object.keys(grouped).sort().forEach(function(k){ if(!seen[k]){ keys.push(k); seen[k]=true; } });
+  var out = pinned.slice();
+  keys.forEach(function(k){ grouped[k].slice().sort(opSort).forEach(function(c){ out.push(c); }); });
+  return out;
+}
+
+function loadPlan(){
+  jsonpCall(SCRIPT_URL, { action:'getPlan' }).then(function(res){
+    if(res && res.success){
+      planMode = (res.mode==='manual')?'manual':'auto';
+      planPinnedReqs = res.pinnedReqs || [];
+      planGroupOrder = res.groupOrder || [];
+    }
+    renderPlanControls();
+    if(currentView==='operator'){ renderOperator(); detectNewPins(); }
+  }).catch(function(e){ console.error('getPlan', e); renderPlanControls(); });
+}
+
+// Small card in col-left: mode toggle + summary + "Open editor" button
+function renderPlanControls(){
+  var el = document.getElementById('plan-body'); if(!el) return;
+  var toggle = '<div class="plan-toggle">'+
+    '<button class="plan-opt'+(planMode==='auto'?' on':'')+'" onclick="setPlanMode(\'auto\')">'+t('planAuto')+'</button>'+
+    '<button class="plan-opt'+(planMode==='manual'?' on':'')+'" onclick="setPlanMode(\'manual\')">'+t('planManual')+'</button>'+
+  '</div>';
+  var inner;
+  if(planMode==='auto'){
+    inner = '<div class="plan-note">'+t('planAutoNote')+'</div>';
+  } else {
+    var todo = getTodoSamples();
+    var groups = {}; todo.forEach(function(c){ var k=recipeKey(c); (groups[k]=groups[k]||[]).push(c); });
+    var nGroups = Object.keys(groups).length;
+    var nPinned = planPinnedReqs.filter(function(r){ return todo.some(function(c){return c.req===r;}); }).length;
+    var summary = '<div class="plan-summary">'+
+      '<div><span class="plan-summary-n">'+nPinned+'</span> '+t('planPinned')+'</div>'+
+      '<div><span class="plan-summary-n">'+nGroups+'</span> '+t('planGroups')+'</div>'+
+      '<div><span class="plan-summary-n">'+todo.length+'</span> '+t('planSamples')+'</div>'+
+    '</div>';
+    inner = '<div class="plan-note">'+t('planManualNote')+'</div>'+summary+
+      '<button class="plan-save" onclick="openPlanEditor()">'+t('planOpenEditor')+'</button>';
+  }
+  el.innerHTML = toggle + inner;
+}
+
+function setPlanMode(m){
+  m = (m==='manual')?'manual':'auto';
+  if(m==='manual'){
+    planMode = 'manual'; renderPlanControls();
+    persistPlan();   // persist mode change
+  } else {
+    planMode = 'auto';
+    persistPlan();
+  }
+}
+
+function persistPlan(){
+  renderPlanControls();
+  if(currentView==='operator') renderOperator();
+  jsonpCall(SCRIPT_URL, {
+    action:'setPlan',
+    mode: planMode,
+    pinned: planPinnedReqs.join('||'),
+    groups: planGroupOrder.join('||')
+  }).then(function(res){
+    if(res && res.success){
+      planMode = res.mode;
+      planPinnedReqs = res.pinnedReqs || [];
+      planGroupOrder = res.groupOrder || [];
+    }
+    opToast(t('planSaved'));
+  }).catch(function(e){ console.error('setPlan', e); opToast(t('opErr'), true); });
+}
+
+// ──── Fullscreen plan editor ────
+function openPlanEditor(){
+  // Initialize working copies from current saved state, normalized to current to-do
+  var todo = getTodoSamples();
+  var byReq = {}; todo.forEach(function(c){ if(c.req) byReq[c.req] = c; });
+  editorPinned = planPinnedReqs.filter(function(r){ return byReq[r]; });
+  var pinnedSet={}; editorPinned.forEach(function(r){ pinnedSet[r]=true; });
+  var groupSet={}; todo.forEach(function(c){ if(!pinnedSet[c.req]) groupSet[recipeKey(c)] = true; });
+  editorGroups=[]; var seen={};
+  (planGroupOrder||[]).forEach(function(k){ if(groupSet[k] && !seen[k]){ editorGroups.push(k); seen[k]=true; } });
+  Object.keys(groupSet).sort().forEach(function(k){ if(!seen[k]){ editorGroups.push(k); seen[k]=true; } });
+  document.getElementById('plan-editor').classList.add('show');
+  document.getElementById('plan-cmd-msg').textContent = '';
+  document.getElementById('plan-cmd-input').value = '';
+  renderPlanEditor();
+}
+function closePlanEditor(){ document.getElementById('plan-editor').classList.remove('show'); }
+function savePlanEditor(){
+  var newlyPinned = editorPinned.filter(function(r){ return planPinnedReqs.indexOf(r) === -1; });
+  planPinnedReqs = editorPinned.slice();
+  planGroupOrder = editorGroups.slice();
+  persistPlan();
+  closePlanEditor();
+  if(newlyPinned.length){
+    var byReq = {}; allCampioni.forEach(function(c){ if(c.req) byReq[c.req] = c; });
+    var codes = newlyPinned.map(function(r){ var c = byReq[r]; return c ? c.codice : r; });
+    sendPushNotification(t('pushPinTitle'), t('pushPinBody') + ' ' + codes.join(', '), 'pin');
+  }
+}
+
+function renderPlanEditor(){
+  var todo = getTodoSamples();
+  var byReq = {}; todo.forEach(function(c){ if(c.req) byReq[c.req] = c; });
+
+  // Pinned section
+  var pinnedItems = editorPinned.map(function(r){ return byReq[r]; }).filter(Boolean);
+  var pinnedHtml;
+  if(!pinnedItems.length){
+    pinnedHtml = '<div class="ed-empty">'+t('edNoPinned')+'</div>';
+  } else {
+    pinnedHtml = pinnedItems.map(function(c,i){
+      var sub = [c.ricetta, c.tipo, c.cliente].filter(Boolean).join(' · ');
+      return '<div class="ed-pin">'+
+        '<span class="ed-pin-icon">📌</span><span class="ed-num">'+(i+1)+'</span>'+
+        '<div class="ed-pin-main"><div class="ed-pin-code">'+opEsc(c.codice)+'</div><div class="ed-pin-sub">'+opEsc(sub)+'</div></div>'+
+        '<div class="ed-arrows">'+
+          '<button onclick="pinMove('+i+',-1)"'+(i===0?' disabled':'')+'>&#9650;</button>'+
+          '<button onclick="pinMove('+i+',1)"'+(i===pinnedItems.length-1?' disabled':'')+'>&#9660;</button>'+
+        '</div>'+
+        '<button class="ed-unpin" onclick="unpinReq(\''+c.req.replace(/'/g,"\\'")+'\')" title="Unpin">&#x2715;</button>'+
+      '</div>';
+    }).join('');
+  }
+
+  // Groups section (with expand/collapse for in-group pinning)
+  var pinnedSet={}; editorPinned.forEach(function(r){ pinnedSet[r]=true; });
+  var grouped={}; todo.forEach(function(c){ if(!pinnedSet[c.req]){ var k=recipeKey(c); (grouped[k]=grouped[k]||[]).push(c); } });
+  // Make sure editorGroups contains exactly the current groups
+  var seen={}; var newGroups=[];
+  editorGroups.forEach(function(k){ if(grouped[k] && !seen[k]){ newGroups.push(k); seen[k]=true; } });
+  Object.keys(grouped).sort().forEach(function(k){ if(!seen[k]){ newGroups.push(k); seen[k]=true; } });
+  editorGroups = newGroups;
+
+  var groupsHtml = editorGroups.map(function(k,i){
+    var samples = grouped[k]||[]; var pcs = samples.reduce(function(s,c){ var q=parseInt(c.qta,10); return s+(q>0?q:0); }, 0);
+    var hasUrg = samples.some(function(c){ return c.prioKey==='urgente'; });
+    var isOpen = editorExpanded[k];
+    var head = '<div class="ed-group-head'+(hasUrg?' urg':'')+'" onclick="toggleEdGroup(\''+k.replace(/'/g,"\\'")+'\')">'+
+      '<span class="ed-num">'+(i+1)+'</span>'+
+      '<div class="ed-group-main"><div class="ed-group-name">'+opEsc(k)+'</div>'+
+        '<div class="ed-group-sub">'+samples.length+' '+t('planSamples')+' · '+pcs+' '+t('pcs')+(hasUrg?' · ⚠':'')+'</div></div>'+
+      '<div class="ed-arrows" onclick="event.stopPropagation()">'+
+        '<button onclick="groupMove('+i+',-1)"'+(i===0?' disabled':'')+'>&#9650;</button>'+
+        '<button onclick="groupMove('+i+',1)"'+(i===editorGroups.length-1?' disabled':'')+'>&#9660;</button>'+
+      '</div>'+
+      '<svg class="ed-chev'+(isOpen?' open':'')+'" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>'+
+    '</div>';
+    var body = '';
+    if(isOpen){
+      body = '<div class="ed-group-samples">'+
+        samples.slice().sort(opSort).map(function(c){
+          var bits = [c.tipo, c.cliente, c.qta?c.qta+' '+t('pcs'):''].filter(Boolean).join(' · ');
+          return '<div class="ed-sample'+(c.prioKey==='urgente'?' urg':'')+'">'+
+            '<div class="ed-sample-main"><div class="ed-sample-code">'+opEsc(c.codice)+'</div>'+
+              (bits?'<div class="ed-sample-sub">'+opEsc(bits)+'</div>':'')+'</div>'+
+            '<button class="ed-pin-btn" onclick="pinReq(\''+c.req.replace(/'/g,"\\'")+'\')">📌 '+t('planPin')+'</button>'+
+          '</div>';
+        }).join('')+
+      '</div>';
+    }
+    return '<div class="ed-group">'+head+body+'</div>';
+  }).join('');
+
+  document.getElementById('plan-editor-pinned').innerHTML =
+    '<div class="ed-section-title">📌 '+t('planPinned')+'</div>' + pinnedHtml;
+  document.getElementById('plan-editor-groups').innerHTML =
+    '<div class="ed-section-title">'+t('planGroups')+'</div>' + (groupsHtml || '<div class="ed-empty">'+t('planEmpty')+'</div>');
+}
+var editorExpanded = {};
+function toggleEdGroup(k){ editorExpanded[k] = !editorExpanded[k]; renderPlanEditor(); }
+function groupMove(i, dir){
+  var j = i + dir; if(j<0 || j>=editorGroups.length) return;
+  var tmp = editorGroups[i]; editorGroups[i] = editorGroups[j]; editorGroups[j] = tmp;
+  renderPlanEditor();
+}
+function pinMove(i, dir){
+  var j = i + dir; if(j<0 || j>=editorPinned.length) return;
+  var tmp = editorPinned[i]; editorPinned[i] = editorPinned[j]; editorPinned[j] = tmp;
+  renderPlanEditor();
+}
+function pinReq(r){ if(editorPinned.indexOf(r)===-1) editorPinned.push(r); renderPlanEditor(); }
+function unpinReq(r){ editorPinned = editorPinned.filter(function(x){ return x !== r; }); renderPlanEditor(); }
+
+// Quick-command box parser
+function runPlanCommand(){
+  var input = document.getElementById('plan-cmd-input');
+  var msg = document.getElementById('plan-cmd-msg');
+  var cmd = (input.value||'').trim();
+  if(!cmd){ msg.textContent=''; return; }
+  var todo = getTodoSamples();
+  var lc = cmd.toLowerCase();
+  var ok = false, out = '';
+
+  // pin <code>            → pin first sample matching code (errors on ambiguity)
+  // unpin <code>          → unpin matching pinned sample
+  // move group <name> to <n>
+  // clear pins
+  var m;
+  if(lc === 'clear pins' || lc === 'clear pin'){
+    editorPinned = []; ok = true; out = t('cmdClearedPins');
+  } else if((m = lc.match(/^pin\s+(.+)$/))){
+    var q = m[1].trim().toUpperCase().replace(/[^A-Z0-9 ]/g,' ');
+    var parts = q.split(/\s+/).filter(Boolean);
+    var codeQ = parts.shift() || '';
+    var extra = parts.join(' ');
+    var matches = todo.filter(function(c){ return (c.codice||'').toUpperCase().replace(/[^A-Z0-9]/g,'').indexOf(codeQ.replace(/[^A-Z0-9]/g,'')) !== -1; });
+    if(extra) matches = matches.filter(function(c){
+      var s = ((c.ricetta||'')+' '+(c.tipo||'')).toUpperCase();
+      return extra.split(' ').every(function(w){ return w && s.indexOf(w) !== -1; });
+    });
+    if(matches.length === 0){ out = t('cmdNoMatch') + ' "' + cmd + '"'; }
+    else if(matches.length > 1){ out = t('cmdAmbiguous').replace('{n}', matches.length) + ' — ' + matches.slice(0,3).map(function(c){return c.codice+' ('+(c.ricetta||'-')+'/'+(c.tipo||'-')+')';}).join('; '); }
+    else { pinReq(matches[0].req); ok = true; out = t('cmdPinned') + ' ' + matches[0].codice; }
+  } else if((m = lc.match(/^unpin\s+(.+)$/))){
+    var q2 = m[1].trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
+    var byReq2={}; todo.forEach(function(c){ if(c.req) byReq2[c.req]=c; });
+    var pinSamples = editorPinned.map(function(r){return byReq2[r];}).filter(Boolean);
+    var hits = pinSamples.filter(function(c){ return (c.codice||'').toUpperCase().replace(/[^A-Z0-9]/g,'').indexOf(q2) !== -1; });
+    if(!hits.length){ out = t('cmdNoMatch') + ' "' + cmd + '"'; }
+    else { hits.forEach(function(c){ unpinReq(c.req); }); ok = true; out = t('cmdUnpinned') + ' ' + hits.map(function(c){return c.codice;}).join(', '); }
+  } else if((m = lc.match(/^move\s+group\s+"?([^"]+?)"?\s+to\s+(\d+)$/))){
+    var name = m[1].trim(); var pos = parseInt(m[2],10) - 1;
+    var idx = -1;
+    for(var i=0;i<editorGroups.length;i++){ if(editorGroups[i].toLowerCase() === name) { idx=i; break; } }
+    if(idx===-1) for(var i=0;i<editorGroups.length;i++){ if(editorGroups[i].toLowerCase().indexOf(name) !== -1) { idx=i; break; } }
+    if(idx===-1){ out = t('cmdNoMatch') + ' "' + name + '"'; }
+    else if(pos < 0 || pos >= editorGroups.length){ out = t('cmdBadPos'); }
+    else {
+      var moved = editorGroups.splice(idx,1)[0];
+      editorGroups.splice(pos, 0, moved);
+      ok = true; out = t('cmdMovedGroup').replace('{name}', moved).replace('{n}', pos+1);
+    }
+  } else {
+    out = t('cmdUnknown');
+  }
+  msg.className = 'plan-cmd-msg' + (ok ? ' ok' : ' err');
+  msg.textContent = out;
+  if(ok){ input.value=''; renderPlanEditor(); }
+}
+
+// ──── Operator: pin modal with new-pin + daily-reminder logic ────
+function todayKey(){
+  var d = new Date(), p = function(n){ return (n<10?'0':'')+n; };
+  return d.getFullYear() + '-' + p(d.getMonth()+1) + '-' + p(d.getDate());
+}
+function detectNewPins(){
+  if(planMode!=='manual' || !planPinnedReqs.length) return;
+
+  // Only show samples that are still active (not yet completed)
+  var byReq = {};
+  allCampioni.forEach(function(c){ if(c.req) byReq[c.req] = c; });
+  var activePinned = planPinnedReqs
+    .map(function(r){ return byReq[r]; })
+    .filter(function(c){ return c && c.statoKey !== 'completato'; });
+  if(!activePinned.length) return;
+
+  // Trigger A — a brand-new pin was added (not yet acknowledged)
+  var ackRaw = ''; try { ackRaw = localStorage.getItem('saitex_ack_pins') || ''; } catch(e){}
+  var ack = ackRaw ? ackRaw.split(',').filter(Boolean) : [];
+  var ackSet = {}; ack.forEach(function(r){ ackSet[r] = true; });
+  var hasNewPin = planPinnedReqs.some(function(r){ return !ackSet[r]; });
+
+  // Trigger B — first access of a new day, with at least one active pin still open
+  var lastDate = ''; try { lastDate = localStorage.getItem('saitex_pin_ack_date') || ''; } catch(e){}
+  var isNewDay = lastDate !== todayKey();
+
+  if(!hasNewPin && !isNewDay) return;
+  showPinNoticeModal(activePinned);
+}
+function showPinNoticeModal(samples){
+  var el = document.getElementById('pin-notice');
+  var body = document.getElementById('pin-notice-body');
+  body.innerHTML = samples.map(function(c){
+    var sub = [c.ricetta, c.tipo, c.cliente, c.qta?c.qta+' '+t('pcs'):''].filter(Boolean).join(' · ');
+    return '<div class="pin-modal-item"><div class="pin-modal-code">'+opEsc(c.codice)+'</div><div class="pin-modal-sub">'+opEsc(sub)+'</div></div>';
+  }).join('');
+  el.classList.add('show');
+  if(navigator.vibrate) navigator.vibrate([200,80,200]);
+}
+function closePinNoticeModal(){
+  document.getElementById('pin-notice').classList.remove('show');
+  // Save ack state on actual OK click so reloads don't lose the prompt
+  try {
+    localStorage.setItem('saitex_ack_pins', planPinnedReqs.join(','));
+    localStorage.setItem('saitex_pin_ack_date', todayKey());
+  } catch(e){}
+}
+
+// ─── MANAGER MESSAGES (bulletin board) ──────────────────────────────────────
+function loadMessages(){
+  jsonpCall(SCRIPT_URL, { action:'getMessages' }).then(function(res){
+    if(res && res.success){
+      managerMessages = res.messages || [];
+      renderManagerMessages();
+      updateMsgBanner();
+      if(currentView === 'operator') checkUnreadMessages();
+    }
+  }).catch(function(e){ console.error('getMessages', e); });
+}
+function saveMessages(){
+  jsonpCall(SCRIPT_URL, { action:'setMessages', messages: JSON.stringify(managerMessages) })
+    .then(function(res){
+      if(res && res.success){
+        managerMessages = res.messages || [];
+        renderManagerMessages(); updateMsgBanner();
+      } else { opToast(t('opErr'), true); }
+    }).catch(function(e){ console.error('setMessages', e); opToast(t('opErr'), true); });
+}
+function addManagerMessage(){
+  var input = document.getElementById('mgr-msg-input');
+  var text = (input.value || '').trim();
+  if(!text) return;
+  var d = new Date(), p = function(n){ return (n<10?'0':'')+n; };
+  var stamp = p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear()+' '+p(d.getHours())+':'+p(d.getMinutes());
+  managerMessages.push({ id: String(Date.now()), text: text, createdAt: stamp });
+  input.value = '';
+  saveMessages();
+  sendPushNotification(t('pushMsgTitle'), text, 'message');
+}
+function deleteManagerMessage(id){
+  managerMessages = managerMessages.filter(function(m){ return m.id !== id; });
+  saveMessages();
+}
+function renderManagerMessages(){
+  var el = document.getElementById('mgr-msg-list'); if(!el) return;
+  if(!managerMessages.length){ el.innerHTML = '<div class="mgr-msg-empty">'+t('mgrMsgEmpty')+'</div>'; return; }
+  el.innerHTML = managerMessages.map(function(m){
+    return '<div class="mgr-msg-item">'+
+      '<div class="mgr-msg-text">'+opEsc(m.text)+'</div>'+
+      '<div class="mgr-msg-bottom">'+
+        '<span class="mgr-msg-time">'+opEsc(m.createdAt||'')+'</span>'+
+        '<button class="mgr-msg-del" onclick="deleteManagerMessage(\''+m.id+'\')" title="Delete">&#x2715;</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+// Operator side
+function updateMsgBanner(){
+  var banner = document.getElementById('op-msg-banner'); if(!banner) return;
+  if(managerMessages.length){
+    var lbl = managerMessages.length === 1 ? t('mgrMsgOne') : t('mgrMsgMany');
+    banner.style.display = '';
+    banner.innerHTML = '<span class="op-msg-icon">📢</span><span>'+managerMessages.length+' '+lbl+'</span>';
+  } else {
+    banner.style.display = 'none';
+  }
+}
+function checkUnreadMessages(){
+  if(!managerMessages.length) return;
+  var ackRaw = ''; try { ackRaw = localStorage.getItem('saitex_msg_acks') || ''; } catch(e){}
+  var acks = ackRaw ? ackRaw.split(',').filter(Boolean) : [];
+  var ackSet = {}; acks.forEach(function(id){ ackSet[id] = true; });
+  var unread = managerMessages.some(function(m){ return !ackSet[m.id]; });
+  if(unread) showMessagesModal(managerMessages);
+}
+function showMessagesModal(messages){
+  var el = document.getElementById('msg-modal');
+  var body = document.getElementById('msg-modal-body');
+  body.innerHTML = messages.map(function(m){
+    return '<div class="msg-modal-item">'+
+      '<div class="msg-modal-text">'+opEsc(m.text)+'</div>'+
+      (m.createdAt?'<div class="msg-modal-time">'+opEsc(m.createdAt)+'</div>':'')+
+    '</div>';
+  }).join('');
+  el.classList.add('show');
+}
+function closeMessagesModal(){
+  document.getElementById('msg-modal').classList.remove('show');
+  try {
+    var ids = managerMessages.map(function(m){ return m.id; });
+    localStorage.setItem('saitex_msg_acks', ids.join(','));
+  } catch(e){}
+}
+function reopenMessages(){
+  if(managerMessages.length) showMessagesModal(managerMessages);
+}
+// ────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────────
+
+function getStatoKey(val) {
+  if(!val) return 'attesa';
+  var v = val.toUpperCase();
+  if(v.indexOf('PROGRESS') !== -1 || v.indexOf('LAVORAZIONE') !== -1) return 'lavorazione';
+  if(v.indexOf('COMPLETED') !== -1 || v.indexOf('COMPLETAT') !== -1) return 'completato';
+  if(v.indexOf('BLOCKED') !== -1 || v.indexOf('BLOCC') !== -1) return 'bloccato';
+  if(v.indexOf('PENDING') !== -1 || v.indexOf('ATTESA') !== -1) return 'attesa';
+  return 'attesa';
+}
+
+function getPrioKey(val) {
+  if(!val) return 'normale';
+  var v = val.toUpperCase();
+  if(v.indexOf('URGENT') !== -1) return 'urgente';
+  if(v.indexOf('LOW') !== -1 || v.indexOf('BASSA') !== -1) return 'bassa';
+  return 'normale';
+}
+
+var lastSyncState = 'ok';
+var lastSyncTime = '';
+function setSyncState(state) {
+  lastSyncState = state;
+  var dot = document.getElementById('sync-dot');
+  var lbl = document.getElementById('sync-label');
+  dot.className = 'sync-dot' + (state === 'loading' ? ' loading' : state === 'error' ? ' error' : '');
+  if(state === 'loading') {
+    lbl.textContent = t('syncUpdating');
+  } else if(state === 'error') {
+    lbl.textContent = t('syncErr');
+  } else {
+    if(!lastSyncTime) lastSyncTime = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    lbl.textContent = t('syncSynced') + ' ' + lastSyncTime;
+  }
+}
+
+// ─── JSONP helper — bypasses the CORS block of Google Apps Script ──
+function jsonpCall(url, params) {
+  return new Promise(function(resolve, reject) {
+    var cbName = 'gasCallback_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+    var script = document.createElement('script');
+    var timer = setTimeout(function() {
+      cleanup();
+      reject(new Error('Timeout'));
+    }, 20000);
+
+    function cleanup() {
+      clearTimeout(timer);
+      try { delete window[cbName]; } catch(e) { window[cbName] = undefined; }
+      if(script.parentNode) script.parentNode.removeChild(script);
+    }
+
+    window[cbName] = function(data) {
+      cleanup();
+      resolve(data);
+    };
+
+    var query = 'callback=' + cbName;
+    if(params) {
+      Object.keys(params).forEach(function(k) {
+        query += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+      });
+    }
+    script.src = url + '?' + query;
+    script.onerror = function() {
+      cleanup();
+      reject(new Error('Network error — check your connection'));
+    };
+    document.head.appendChild(script);
+  });
+}
+
+// ─── Load sample list ──────────────────────────────────────────
+function loadCampioni() {
+  var btn = document.getElementById('refresh-btn');
+  btn.classList.add('spinning');
+  setSyncState('loading');
+
+  jsonpCall(SCRIPT_URL, { action: 'getData' })
+    .then(function(rows) {
+      allCampioni = rows.map(function(r) {
+        return {
+          req: r.req || '',
+          codice: r.codice || '',
+          desc: r.desc || '',
+          tipo: r.tipo || '',
+          cliente: r.cliente || '',
+          ricetta: r.ricetta || '',
+          qta: r.qta || '',
+          statoRaw: r.statoRaw || '',
+          statoKey: getStatoKey(r.statoRaw || ''),
+          prioKey: getPrioKey(r.priorita || ''),
+          lastUpdate: r.lastUpdate || '',
+          dataUscita: r.dataUscita || '',
+          dataRicevuto: r.dataRicevuto || '',
+          dataRichiesta: r.dataRichiesta || ''
+        };
+      });
+
+      populateFilters();
+      var cnt = { attesa:0, lavorazione:0, completato:0, bloccato:0 };
+      allCampioni.forEach(function(c) {
+        if(cnt[c.statoKey] !== undefined) cnt[c.statoKey]++;
+        else cnt[c.statoKey] = 1;
+      });
+
+      document.getElementById('cnt-attesa').textContent = cnt.attesa;
+      document.getElementById('cnt-lavorazione').textContent = cnt.lavorazione;
+      document.getElementById('cnt-completato').textContent = cnt.completato;
+      document.getElementById('cnt-bloccato').textContent = cnt.bloccato;
+      document.getElementById('cnt-overdue').textContent = allCampioni.filter(isOverdue).length;
+
+      renderCampioni();
+      renderPlanControls();
+      detectNewUrgent();
+      if(currentView === 'operator') { renderOperator(); detectNewPins(); }
+      lastSyncTime = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+      setSyncState('ok');
+      btn.classList.remove('spinning');
+    })
+    .catch(function(e) {
+      console.error('loadCampioni error:', e);
+      setSyncState('error');
+      document.getElementById('campioni-list').innerHTML =
+        '<div class="empty-state">' +
+        '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/>' +
+        '<line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' +
+        t('connErrList') +
+        '</div>';
+      btn.classList.remove('spinning');
+    });
+}
+
+function parseExitDate(s){
+  if(!s) return null;
+  // Accepts "dd/MM/yyyy HH:mm" or "dd/MM/yyyy"; strips any "Sent to Amata · " prefix
+  var str = String(s).replace(/^.*·\s*/, '').trim();
+  var m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?$/);
+  if(!m) return null;
+  return new Date(+m[3], +m[2]-1, +m[1], +(m[4]||0), +(m[5]||0));
+}
+function dayBucket(d){
+  if(!d) return 'unknown';
+  var today = new Date(); today.setHours(0,0,0,0);
+  var t0 = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  var diff = Math.round((today - t0) / 86400000);
+  if(diff === 0) return 'today';
+  if(diff === 1) return 'yesterday';
+  if(diff < 7) return 'thisweek';
+  if(diff < 14) return 'lastweek';
+  return 'earlier';
+}
+function formatExitChip(s){
+  var d = parseExitDate(s);
+  if(!d) return s || '';
+  var p = function(n){ return (n<10?'0':'')+n; };
+  var time = p(d.getHours())+':'+p(d.getMinutes());
+  var b = dayBucket(d);
+  if(b === 'today') return t('today')+' '+time;
+  if(b === 'yesterday') return t('yesterday')+' '+time;
+  if(d.getFullYear() === new Date().getFullYear()) return p(d.getDate())+'/'+p(d.getMonth()+1)+' '+time;
+  return p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+String(d.getFullYear()).slice(2)+' '+time;
+}
+function exitTime(c){
+  return parseExitDate(c.dataUscita) || parseExitDate(c.lastUpdate);
+}
+function toggleTodayOnly(){ showOnlyToday = !showOnlyToday; renderCampioni(); }
+
+function isOverdue(c){
+  if(c.statoKey === 'completato') return false;
+  var d = parseISODate(c.dataRichiesta);
+  if(!d) return false;
+  var today = new Date(); today.setHours(0,0,0,0);
+  return d.getTime() < today.getTime();
+}
+function getManagerFiltered(){
+  var filtered;
+  if(activeFilter === 'tutti') filtered = allCampioni.slice();
+  else if(activeFilter === 'overdue') filtered = allCampioni.filter(isOverdue);
+  else filtered = allCampioni.filter(function(c){ return c.statoKey === activeFilter; });
+  if(searchQuery) filtered = filtered.filter(function(c){ return normSearch(c.codice).indexOf(searchQuery) !== -1; });
+  if(typeFilter) filtered = filtered.filter(function(c){ return c.tipo === typeFilter; });
+  if(brandFilter) filtered = filtered.filter(function(c){ return c.cliente === brandFilter; });
+  if(recipeFilter) filtered = filtered.filter(function(c){ return c.ricetta === recipeFilter; });
+  return filtered;
+}
+// ─── NEW SAMPLE FORM ────────────────────────────────────────────────────────
+// Sticky fields keep value across "Save & Add Another" — typical when a batch
+// of samples share the same Brand/Recipe/Type/RequestedBy/Dates.
+var addFormSticky = ['brand','type','recipe','by','date-req'];
+var addFormUserSetPin = false;  // tracks whether the user manually changed the pin checkbox
+
+function openAddForm(){
+  populateAddDropdowns();
+  // Default date received not currently a field; deadline left blank by default.
+  document.getElementById('af-code').focus();
+  document.getElementById('add-form').classList.add('show');
+  document.getElementById('af-msg').textContent = '';
+}
+function closeAddForm(){
+  document.getElementById('add-form').classList.remove('show');
+  // Reset everything (including sticky) when explicitly closing
+  ['code','desc','brand','type','recipe','qty','by','date-req'].forEach(function(k){
+    document.getElementById('af-'+k).value = '';
+  });
+  document.getElementById('af-prio').value = 'normale';
+  document.getElementById('af-pin').checked = false;
+  addFormUserSetPin = false;
+}
+function populateAddDropdowns(){
+  var brands={}, types={}, recipes={}, byList={};
+  allCampioni.forEach(function(c){
+    if(c.cliente) brands[c.cliente]=1;
+    if(c.tipo) types[c.tipo]=1;
+    if(c.ricetta) recipes[c.ricetta]=1;
+    if(c.richiestoDa) byList[c.richiestoDa]=1;
+  });
+  function fill(id, vals){
+    var el = document.getElementById(id);
+    el.innerHTML = vals.sort().map(function(v){ return '<option value="'+String(v).replace(/"/g,'&quot;')+'">'; }).join('');
+  }
+  fill('dl-brands', Object.keys(brands));
+  fill('dl-types', Object.keys(types));
+  fill('dl-recipes', Object.keys(recipes));
+  fill('dl-by', Object.keys(byList));
+}
+function onPrioChange(){
+  // If the user hasn't manually decided yet, propose the pin when Urgent
+  if(addFormUserSetPin) return;
+  var p = document.getElementById('af-prio').value;
+  document.getElementById('af-pin').checked = (p === 'urgente');
+}
+document.addEventListener('change', function(e){
+  if(e.target && e.target.id === 'af-pin') addFormUserSetPin = true;
+});
+
+var addDupConfirmCode = '';   // normalized code the user has confirmed to duplicate
+var addDupAddAnother = false;
+function confirmDup(){
+  document.getElementById('af-dup-warn').style.display = 'none';
+  submitAdd(addDupAddAnother);   // addDupConfirmCode is armed, so it proceeds
+}
+function cancelDup(){
+  document.getElementById('af-dup-warn').style.display = 'none';
+  addDupConfirmCode = '';
+  document.getElementById('af-code').focus();
+}
+
+function submitAdd(addAnother){
+  var code = document.getElementById('af-code').value.trim();
+  var msg = document.getElementById('af-msg');
+  if(!code){ msg.className='af-msg err'; msg.textContent = t('afNoCode'); document.getElementById('af-code').focus(); return; }
+
+  // Duplicate check — warn if this fabric code already exists, but allow override
+  var normC = code.toUpperCase().replace(/[^A-Z0-9]/g,'');
+  var dups = allCampioni.filter(function(c){ return (c.codice||'').toUpperCase().replace(/[^A-Z0-9]/g,'') === normC; });
+  if(dups.length && addDupConfirmCode !== normC){
+    addDupConfirmCode = normC;       // arm: next click on the same code proceeds
+    addDupAddAnother = addAnother;
+    var listed = dups.slice(0,4).map(function(c){
+      return '<li>'+opEsc(c.codice)+' · '+opEsc(c.ricetta||'-')+' · '+opEsc(c.tipo||'-')+' · '+opEsc(t(STATO_LABEL[c.statoKey]||'lblPending'))+'</li>';
+    }).join('');
+    var more = dups.length>4 ? '<li>+'+(dups.length-4)+'…</li>' : '';
+    document.getElementById('af-dup-warn').innerHTML =
+      '<div class="af-dup-title">⚠ '+t('afDupTitle').replace('{n}', dups.length)+'</div>'+
+      '<ul class="af-dup-list">'+listed+more+'</ul>'+
+      '<div class="af-dup-actions">'+
+        '<button class="af-dup-cancel" onclick="cancelDup()">'+t('afDupCancel')+'</button>'+
+        '<button class="af-dup-ok" onclick="confirmDup()">'+t('afDupConfirm')+'</button>'+
+      '</div>';
+    document.getElementById('af-dup-warn').style.display = 'block';
+    return;
+  }
+  document.getElementById('af-dup-warn').style.display = 'none';
+  addDupConfirmCode = '';
+
+  var btnSave = document.querySelector('.af-save');
+  var btnAdd = document.querySelector('.af-save-add');
+  btnSave.disabled = true; btnAdd.disabled = true;
+  msg.className='af-msg'; msg.textContent = t('afSaving');
+
+  var prioMap = { normale:'🟡 NORMAL', urgente:'🔴 URGENT', bassa:'🟢 LOW' };
+  var prioVal = document.getElementById('af-prio').value;
+  var wantPin = document.getElementById('af-pin').checked;
+
+  jsonpCall(SCRIPT_URL, {
+    action: 'add',
+    codice: code,
+    desc: document.getElementById('af-desc').value.trim(),
+    cliente: document.getElementById('af-brand').value.trim(),
+    tipo: document.getElementById('af-type').value.trim(),
+    ricetta: document.getElementById('af-recipe').value.trim(),
+    qta: document.getElementById('af-qty').value.trim(),
+    priorita: prioMap[prioVal] || '🟡 NORMAL',
+    richiestoDa: document.getElementById('af-by').value.trim(),
+    dataRichiesta: document.getElementById('af-date-req').value
+  }).then(function(res){
+    btnSave.disabled = false; btnAdd.disabled = false;
+    if(!res || !res.success){
+      msg.className='af-msg err';
+      msg.textContent = t('afErr') + (res && res.reason ? ' (' + res.reason + ')' : '');
+      return;
+    }
+    msg.className='af-msg ok';
+    msg.textContent = t('afSaved') + ' · REQ ' + res.req + ' · ' + code;
+
+    // Pin if requested — uses the just-created REQ#
+    if(wantPin && res.req){
+      if(planMode !== 'manual'){ planMode = 'manual'; }   // pinning requires manual mode
+      if(planPinnedReqs.indexOf(res.req) === -1) planPinnedReqs.push(res.req);
+      persistPlan();
+      sendPushNotification(t('pushPinTitle'), t('pushPinBody') + ' ' + code, 'pin');
+    }
+
+    // Clear non-sticky fields; keep sticky ones for batch entry
+    document.getElementById('af-code').value = '';
+    document.getElementById('af-desc').value = '';
+    document.getElementById('af-qty').value = '';
+    document.getElementById('af-prio').value = 'normale';
+    document.getElementById('af-pin').checked = false;
+    addFormUserSetPin = false;
+
+    if(!addAnother){
+      closeAddForm();
+    } else {
+      document.getElementById('af-code').focus();
+    }
+    loadCampioni();      // refresh manager list
+  }).catch(function(err){
+    btnSave.disabled = false; btnAdd.disabled = false;
+    console.error('add', err);
+    msg.className='af-msg err'; msg.textContent = t('afErr');
+  });
+}
+// ────────────────────────────────────────────────────────────────────────────
+
+function exportXlsx(){
+  if(typeof XLSX === 'undefined'){ alert('Export library still loading — try again in a moment.'); return; }
+  var rows = getManagerFiltered();
+  if(!rows.length){ return; }
+  var statusName = {attesa:'Pending', lavorazione:'In progress', completato:'Completed', bloccato:'Blocked'};
+  var prioName = {urgente:'Urgent', normale:'Normal', bassa:'Low'};
+  var data = rows.map(function(c){
+    return {
+      'REQ #': c.req || '',
+      'Fabric Code': c.codice || '',
+      'Description': c.desc || '',
+      'Type': c.tipo || '',
+      'Brand': c.cliente || '',
+      'Recipe': c.ricetta || '',
+      'Qty': c.qta || '',
+      'Priority': prioName[c.prioKey] || '',
+      'Status': statusName[c.statoKey] || c.statoRaw || '',
+      'Overdue': isOverdue(c) ? 'YES' : '',
+      'Date Received': c.dataRicevuto || '',
+      'Date Requested': c.dataRichiesta || '',
+      'Exit': c.dataUscita || '',
+      'Last Update': c.lastUpdate || ''
+    };
+  });
+  var ws = XLSX.utils.json_to_sheet(data);
+  ws['!cols'] = [{wch:9},{wch:14},{wch:20},{wch:12},{wch:12},{wch:16},{wch:6},{wch:9},{wch:11},{wch:9},{wch:14},{wch:14},{wch:16},{wch:18}];
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Washing Tracker');
+  var d = new Date(), p = function(n){return (n<10?'0':'')+n;};
+  XLSX.writeFile(wb, 'saitex-washing-' + d.getFullYear() + p(d.getMonth()+1) + p(d.getDate()) + '.xlsx');
+}
+
+function renderCampioni() {
+  var filtered = getManagerFiltered();
+
+  document.getElementById('list-count').textContent = '(' + filtered.length + ')';
+  var listEl = document.getElementById('campioni-list');
+
+  if(filtered.length === 0) {
+    listEl.innerHTML =
+      '<div class="empty-state">' +
+      '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/>' +
+      '<polyline points="12 6 12 12 16 14"/></svg>' +
+      (searchQuery ? t('noMatch') : t('noSamples')) + '</div>';
+    return;
+  }
+
+  var prioOrder = {urgente:0, normale:1, bassa:2};
+  function sortItems(arr) {
+    arr.sort(function(a,b) {
+      var p = (prioOrder[a.prioKey]||1) - (prioOrder[b.prioKey]||1);
+      if(p !== 0) return p;
+      var da = daysWaiting(a), db = daysWaiting(b);
+      var na = (da === null ? -1 : da), nb = (db === null ? -1 : db);
+      if(nb !== na) return nb - na; // oldest waiting first
+      return (a.codice || '').localeCompare(b.codice || '');
+    });
+    return arr;
+  }
+
+  function rowHtml(c) {
+    var statoLabel = t(STATO_LABEL[c.statoKey] || 'lblPending');
+    var prioLabel = t(PRIO_LABEL[c.prioKey] || 'prioNormal');
+    var isCompleted = c.statoKey === 'completato';
+    var metaParts = [c.tipo, c.cliente, c.ricetta, c.qta ? c.qta + ' ' + t('pcs') : ''].filter(Boolean);
+    var meta = metaParts.join(' · ');
+
+    // Bottom line: in-progress / amata stamp for active rows; nothing for completed (date moves to chip on the right)
+    var stamp = '';
+    if(!isCompleted && c.lastUpdate) {
+      if(c.lastUpdate.toLowerCase().indexOf('amata') !== -1) {
+        var when = c.lastUpdate.split('·').slice(1).join('·').trim();
+        stamp = '<div class="c-stamp">' + t('sentAmata') + (when ? ' · ' + when : '') + '</div>';
+      } else {
+        stamp = '<div class="c-stamp">' + t('updated') + ' ' + c.lastUpdate + '</div>';
+      }
+    }
+
+    var safeCode = (c.codice || '').replace(/'/g, "\\'");
+    var safeReq = (c.req || '').replace(/'/g, "\\'");
+
+    // Right-side content depends on completed vs active
+    var rightContent;
+    if(isCompleted) {
+      var exitTxt = c.dataUscita ? formatExitChip(c.dataUscita) : (c.lastUpdate ? formatExitChip(c.lastUpdate) : '');
+      var chip = exitTxt
+        ? '<span class="c-exitchip"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>'+exitTxt+'</span>'
+        : '';
+      rightContent = chip + '<span class="c-stato stato-completato">'+statoLabel+'</span>';
+    } else {
+      var dw = daysWaiting(c);
+      var ageBadge = '';
+      if(dw !== null) {
+        var ageCls = dw >= 7 ? ' late' : (dw >= 3 ? ' warn' : '');
+        ageBadge = '<span class="c-age' + ageCls + '" title="' + dw + ' ' + t('daysWaitingTip') + '">' + dw + t('dayShort') + '</span>';
+      }
+      var od = isOverdue(c);
+      var odTag = od ? '<span class="c-overdue-tag">' + t('overdueTag') + '</span>' : '';
+      rightContent = odTag + ageBadge +
+        '<span class="c-prio prio-' + c.prioKey + '">' + prioLabel + '</span>' +
+        '<span class="c-stato stato-' + c.statoKey + '">' + statoLabel + '</span>';
+    }
+
+    var cls = 'campione-row';
+    if(!isCompleted && c.prioKey === 'urgente') cls += ' urgent';
+    if(!isCompleted && isOverdue(c)) cls += ' overdue';
+    if(isCompleted) cls += ' completed-row';
+
+    return '<div class="' + cls + '" onclick="pickRow(\'' + safeReq + '\',\'' + safeCode + '\')">' +
+      '<div class="c-codice">' + (c.codice || '—') + '</div>' +
+      '<div class="c-info">' +
+        '<div class="c-desc">' + (c.desc || '—') + '</div>' +
+        (meta ? '<div class="c-meta">' + meta + '</div>' : '') +
+        stamp +
+      '</div>' +
+      '<div class="c-right">' + rightContent + '</div>' +
+    '</div>';
+  }
+
+  // Renders completed items grouped by day (today, yesterday, this week, ...)
+  function renderCompletedGrouped(items, withFilter) {
+    var sorted = items.slice().sort(function(a,b){
+      var da = exitTime(a), db = exitTime(b);
+      if(da && db) return db.getTime() - da.getTime();
+      if(da) return -1; if(db) return 1; return 0;
+    });
+    var groups = {today:[], yesterday:[], thisweek:[], lastweek:[], earlier:[], unknown:[]};
+    sorted.forEach(function(c){ var b = dayBucket(exitTime(c)); (groups[b] = groups[b] || []).push(c); });
+    var todayCount = groups.today.length;
+    var totalCount = items.length;
+
+    var html = '';
+    if(withFilter){
+      html += '<div class="completed-filter-bar">'+
+        '<button class="cfb-btn'+(showOnlyToday?' active':'')+'" onclick="event.stopPropagation();if(!showOnlyToday)toggleTodayOnly()">'+t('bucketToday')+' <span class="cfb-n">'+todayCount+'</span></button>'+
+        '<button class="cfb-btn'+(!showOnlyToday?' active':'')+'" onclick="event.stopPropagation();if(showOnlyToday)toggleTodayOnly()">'+t('allCompleted')+' <span class="cfb-n">'+totalCount+'</span></button>'+
+      '</div>';
+      if(showOnlyToday){
+        if(!todayCount) return html + '<div class="section-note">'+t('noCompletedToday')+'</div>';
+        return html + groups.today.map(rowHtml).join('');
+      }
+    }
+
+    var labels = {today:'bucketToday', yesterday:'bucketYesterday', thisweek:'bucketThisWeek', lastweek:'bucketLastWeek', earlier:'bucketEarlier', unknown:'bucketUnknown'};
+    var keys = ['today','yesterday','thisweek','lastweek','earlier','unknown'];
+    var anyShown = false;
+    keys.forEach(function(k){
+      if(!groups[k] || !groups[k].length) return;
+      anyShown = true;
+      html += '<div class="day-section-header">'+t(labels[k])+' <span class="dsh-n">'+groups[k].length+'</span></div>';
+      html += groups[k].map(rowHtml).join('');
+    });
+    if(!anyShown) html += '<div class="section-note">'+t('noActive')+'</div>';
+    return html;
+  }
+
+  // In the "All" view: active samples on top, completed grouped-by-day in a collapsible section below.
+  if(activeFilter === 'tutti') {
+    var active = sortItems(filtered.filter(function(c) { return c.statoKey !== 'completato'; }));
+    var done = filtered.filter(function(c) { return c.statoKey === 'completato'; });
+    var html = active.length ? active.map(rowHtml).join('')
+                             : '<div class="section-note">' + t('noActive') + '</div>';
+    if(done.length) {
+      html += '<button class="section-toggle' + (showCompleted ? ' open' : '') + '" onclick="toggleCompleted()">' +
+        '<svg class="chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>' +
+        '<span>' + t('completedHdr') + '</span><span class="cnt">(' + done.length + ')</span></button>';
+      if(showCompleted) html += renderCompletedGrouped(done, false);
+    }
+    listEl.innerHTML = html;
+  } else if(activeFilter === 'completato') {
+    listEl.innerHTML = renderCompletedGrouped(filtered, true);
+  } else {
+    listEl.innerHTML = sortItems(filtered).map(rowHtml).join('');
+  }
+}
+
+function setBtnLoading(loading) {
+  document.getElementById('btn-label').textContent = loading ? t('updating') : t('updateBtn');
+  document.getElementById('spinner').style.display = loading ? 'block' : 'none';
+  document.getElementById('send-btn').disabled = loading;
+}
+
+function showResult(success, title, sub) {
+  document.getElementById('result-area').innerHTML =
+    '<div class="result-card ' + (success ? 'success' : 'error') + '">' +
+      '<div class="result-icon">' + (success ? '✅' : '⚠️') + '</div>' +
+      '<div>' +
+        '<div class="result-title">' + title + '</div>' +
+        '<div class="result-sub">' + sub + '</div>' +
+      '</div>' +
+    '</div>';
+}
+
+// ─── Send status update ────────────────────────────────────────
+function inviaAggiornamento() {
+  var codice = inp.value.trim().toUpperCase();
+  if(!codice) {
+    showResult(false, t('enterCode'), t('fieldEmpty'));
+    inp.focus();
+    return;
+  }
+
+  // Resolve the row unambiguously: prefer the clicked row's REQ#.
+  // For manual code entry, look up matches and refuse if more than one exists.
+  var req = selectedReq;
+  if(!req) {
+    var matches = allCampioni.filter(function(c){ return normSearch(c.codice) === normSearch(codice); });
+    if(matches.length === 1) req = matches[0].req;
+    else if(matches.length > 1) {
+      showResult(false, t('multiMatchTitle'), t('multiMatchSub').replace('{n}', matches.length));
+      return;
+    }
+    // 0 matches → let backend return not_found
+  }
+
+  setBtnLoading(true);
+  document.getElementById('result-area').innerHTML = '';
+
+  jsonpCall(SCRIPT_URL, {
+    action: 'update',
+    req: req || '',
+    codice: codice,
+    stato: statoSelezionato
+  })
+  .then(function(data) {
+    if(data && data.success) {
+      var sKey = getStatoKey(data.status || statoSelezionato);
+      var statusShown = t(STATO_LABEL[sKey] || 'lblPending');
+      var rawLu = data.lastUpdate || '';
+      var luShown = '';
+      if(rawLu) {
+        if(rawLu.toLowerCase().indexOf('amata') !== -1) {
+          var when = rawLu.split('·').slice(1).join('·').trim();
+          luShown = '  ·  ' + t('sentAmata') + (when ? ' · ' + when : '');
+        } else {
+          luShown = '  ·  ' + rawLu;
+        }
+      }
+      showResult(true, t('sheetUpdated'), codice + ' → ' + statusShown + luShown);
+      inp.value = '';
+      selectedReq = null;
+      clearBtn.classList.remove('visible');
+      inp.focus();
+      setTimeout(loadCampioni, 1000);
+    } else {
+      var reason = data && data.reason ? data.reason : '';
+      if(reason === 'write_error') {
+        showResult(false, t('connErr'), 'Write error — check deployment access. ' + (data.error || ''));
+      } else if(reason === 'no_code_column') {
+        showResult(false, t('connErr'), 'FABRIC CODE column not found in the sheet.');
+      } else {
+        showResult(false, t('codeNotFound'), '"' + codice + '" ' + t('notInTracker'));
+      }
+      console.warn('update failed:', data);
+    }
+    setBtnLoading(false);
+  })
+  .catch(function(e) {
+    console.error('inviaAggiornamento error:', e);
+    showResult(false, t('connErr'), t('checkConn'));
+    setBtnLoading(false);
+  });
+}
+
+// Startup
+// ═══════════════════════════════════════════════════════════════
+//  OPERATOR VIEW (alpha) — reuses loaded data, actions NOT saved
+// ═══════════════════════════════════════════════════════════════
+let currentView = 'operator';
+let managerUnlocked = false;
+let opPrevUrgent = null;
+let opSearchQ = '';
+let opShowDone = false;
+let opTab = 'todo';
+let opRecipeFilter = '';
+
+function setView(v) {
+  if(v === 'manager' && !managerUnlocked) { showPinModal(); return; }
+  currentView = v;
+  document.getElementById('manager-view').style.display = (v === 'manager') ? '' : 'none';
+  document.getElementById('operator-view').style.display = (v === 'operator') ? '' : 'none';
+  document.getElementById('vt-manager').classList.toggle('active', v === 'manager');
+  document.getElementById('vt-operator').classList.toggle('active', v === 'operator');
+  var lb = document.getElementById('lock-btn');
+  if(lb) lb.style.display = (v === 'manager') ? 'flex' : 'none';
+  var sb = document.getElementById('sheet-btn');
+  if(sb) sb.style.display = (v === 'manager') ? 'flex' : 'none';
+  if(v === 'operator') { renderOperator(); refreshPushBanner(); }
+}
+
+function showPinModal(){
+  var el = document.getElementById('pin-overlay');
+  el.classList.add('show');
+  var inp = document.getElementById('pin-input');
+  inp.value=''; document.getElementById('pin-error').textContent='';
+  setTimeout(function(){ inp.focus(); }, 120);
+}
+function closePinModal(){
+  document.getElementById('pin-overlay').classList.remove('show');
+}
+function checkPin(){
+  var inp = document.getElementById('pin-input');
+  if(inp.value === MANAGER_PIN){
+    managerUnlocked = true;
+    closePinModal();
+    setView('manager');
+  } else {
+    var err = document.getElementById('pin-error');
+    err.textContent = t('pinWrong');
+    inp.classList.add('shake');
+    setTimeout(function(){ inp.classList.remove('shake'); inp.value=''; inp.focus(); }, 550);
+  }
+}
+function lockManager(){
+  managerUnlocked = false;
+  setView('operator');
+}
+
+function detectNewUrgent() {
+  var cur = {};
+  allCampioni.forEach(function(c) { if(c.prioKey === 'urgente' && c.statoKey !== 'completato') cur[c.codice] = c; });
+  if(opPrevUrgent !== null) {
+    var fresh = Object.keys(cur).filter(function(code) { return opPrevUrgent.indexOf(code) === -1; });
+    if(fresh.length && currentView === 'operator') {
+      var labels = fresh.map(function(code) { var c = cur[code]; return c.codice + (c.cliente ? ' — ' + c.cliente : ''); });
+      showOpBanner(labels);
+      try { if(navigator.vibrate) navigator.vibrate([220,90,220]); } catch(e) {}
+    }
+  }
+  opPrevUrgent = Object.keys(cur);
+}
+function showOpBanner(labels) {
+  document.getElementById('op-ban-title').textContent = t('opNewUrgent');
+  document.getElementById('op-ban-codes').textContent = labels.join('  •  ');
+  document.getElementById('op-banner').classList.add('show');
+}
+function dismissOpBanner() { document.getElementById('op-banner').classList.remove('show'); }
+
+var OP_ORD = { attesa:0, lavorazione:1, bloccato:2 };
+function opSort(a,b) {
+  var ua = a.prioKey==='urgente'?0:1, ub = b.prioKey==='urgente'?0:1;
+  if(ua !== ub) return ua - ub;
+  var s = (OP_ORD[a.statoKey]||0) - (OP_ORD[b.statoKey]||0); if(s) return s;
+  var da = daysWaiting(a), db = daysWaiting(b); var na = da===null?-1:da, nb = db===null?-1:db;
+  if(nb !== na) return nb - na;
+  return (a.codice||'').localeCompare(b.codice||'');
+}
+function opEsc(s){ return String(s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function opStatoLabel(k){ return t({attesa:'lblPending',lavorazione:'lblProgress',completato:'lblCompleted',bloccato:'lblBlocked'}[k] || 'lblPending'); }
+
+function opCardHtml(c, done, num) {
+  var urgent = c.prioKey === 'urgente' && c.statoKey !== 'completato';
+  var meta = [c.tipo, c.cliente, c.qta ? c.qta + ' ' + t('pcs') : ''].filter(Boolean).join(' · ');
+  var dw = daysWaiting(c), age = '';
+  if(dw !== null) { var cl = dw>=7?' late':(dw>=3?' warn':''); age = '<span class="op-pill op-pill-age'+cl+'">'+dw+t('dayShort')+'</span>'; }
+  var stamp = '';
+  if(c.statoKey === 'completato' && c.dataUscita) stamp = '<div class="op-stamp">'+t('exit')+' '+opEsc(c.dataUscita)+'</div>';
+  else if(c.lastUpdate) {
+    if(c.lastUpdate.toLowerCase().indexOf('amata') !== -1) { var w = c.lastUpdate.split('·').slice(1).join('·').trim(); stamp = '<div class="op-stamp">'+t('sentAmata')+(w?' · '+opEsc(w):'')+'</div>'; }
+    else stamp = '<div class="op-stamp">'+t('updated')+' '+opEsc(c.lastUpdate)+'</div>';
+  }
+  var code = opEsc(c.codice), jsReq = (c.req||'').replace(/'/g,"\\'");
+  var numBadge = num ? '<span class="op-num">'+num+'</span>' : '';
+  var isPinned = planMode==='manual' && c.req && planPinnedReqs.indexOf(c.req) !== -1;
+  var pinBadge = isPinned ? '<span class="op-pill op-pill-pinned dot">📌 '+t('planPinned')+'</span>' : '';
+  var badges = '<div class="op-badges">'+age+pinBadge+(urgent?'<span class="op-pill op-pill-urgent dot">'+t('prioUrgent')+'</span>':'')+'<span class="op-pill dot op-st-'+c.statoKey+'">'+opStatoLabel(c.statoKey)+'</span></div>';
+  var actions = '';
+  if(!done) {
+    var blockBtn = '<button class="op-act op-act-block" onclick="opAction(\''+jsReq+'\',\'❌ BLOCKED\',this)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'+t('opBlock')+'</button>';
+    if(c.statoKey === 'attesa') actions = '<button class="op-act op-act-start" onclick="opAction(\''+jsReq+'\',\'🔄 IN PROGRESS\',this)"><svg viewBox="0 0 24 24"><polygon points="6 4 20 12 6 20"/></svg>'+t('opStart')+'</button>'+blockBtn;
+    else if(c.statoKey === 'lavorazione') actions = '<button class="op-act op-act-done" onclick="opAction(\''+jsReq+'\',\'✅ COMPLETED\',this)"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>'+t('opDone')+'</button>'+blockBtn;
+    else if(c.statoKey === 'bloccato') actions = '<button class="op-act op-act-resume" onclick="opAction(\''+jsReq+'\',\'🔄 IN PROGRESS\',this)"><svg viewBox="0 0 24 24"><polygon points="6 4 20 12 6 20"/></svg>'+t('opResume')+'</button>';
+  }
+  return '<div class="op-card'+(urgent?' urgent':'')+(done?' done':'')+(num?' planned':'')+'">'+
+    '<div class="op-top">'+numBadge+'<div class="op-top-right"><div class="op-code">'+(code||'—')+'</div>'+badges+'</div></div>'+
+    (done?'':'<div class="op-desc">'+opEsc(c.desc||'—')+'</div>'+(meta?'<div class="op-meta">'+opEsc(meta)+'</div>':'')+(c.ricetta?'<span class="op-recipe">'+opEsc(c.ricetta)+'</span>':''))+
+    stamp + (actions?'<div class="op-actions">'+actions+'</div>':'') + '</div>';
+}
+
+function opTodayStr(){ var d=new Date(),p=function(n){return(n<10?'0':'')+n;}; return p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear(); }
+function opNorm(s){ return String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,''); }
+
+function renderOperator() {
+  var items = allCampioni;
+  var todo = items.filter(function(c){ return c.statoKey==='attesa' || c.statoKey==='bloccato'; });
+  var prog = items.filter(function(c){ return c.statoKey==='lavorazione'; });
+  var today = opTodayStr();
+  var doneAll = items.filter(function(c){ return c.statoKey==='completato'; });
+  var doneToday = doneAll.filter(function(c){ return (c.dataUscita&&c.dataUscita.indexOf(today)!==-1)||(c.lastUpdate&&c.lastUpdate.indexOf(today)!==-1); });
+  var done = doneToday.length ? doneToday : doneAll;
+
+  var urgentTodo = todo.filter(function(c){ return c.prioKey==='urgente'; }).length;
+  var urgentProg = prog.filter(function(c){ return c.prioKey==='urgente'; }).length;
+
+  // Tab bar (one window per stage)
+  function tab(id, label, n, urg) {
+    return '<button class="op-tab'+(opTab===id?' active':'')+(urg?' has-urgent':'')+'" onclick="setOpTab(\''+id+'\')">'+
+      '<span class="op-tab-lbl">'+label+'</span><span class="op-tab-n">'+n+'</span></button>';
+  }
+  var tabBar = '<div class="op-tabs">'+
+    tab('todo', t('opToDo'), todo.length, urgentTodo>0)+
+    tab('progress', t('lblProgress'), prog.length, urgentProg>0)+
+    tab('done', t('opDone'), done.length, false)+
+  '</div>';
+
+  var body;
+  if(opSearchQ) {
+    var found = items.filter(function(c){ return opNorm(c.codice).indexOf(opSearchQ) !== -1; }).slice().sort(opSort);
+    body = found.length ? found.map(function(c){ return opCardHtml(c, c.statoKey==='completato'); }).join('')
+                        : '<div class="op-empty">'+t('opNoMatch')+'</div>';
+  } else {
+    var isDone = opTab==='done';
+    var fullList = (opTab==='progress' ? prog : opTab==='done' ? done : todo).slice();
+    var emptyMsg = opTab==='progress' ? t('opNoProgress') : opTab==='done' ? t('opNoDone') : t('opNothing');
+    var groupable = (opTab==='todo' || opTab==='progress');
+
+    // Build recipe dropdown (for todo/progress tabs)
+    var controls = '';
+    if(groupable) {
+      var recipes = {};
+      fullList.forEach(function(c){
+        var k = (c.ricetta||'').trim();
+        if(k){ recipes[k] = recipes[k] || {cnt:0, pcs:0}; recipes[k].cnt++; var q=parseInt(c.qta,10); if(q>0) recipes[k].pcs+=q; }
+      });
+      var rKeys = Object.keys(recipes).sort();
+      var btnLabel = opRecipeFilter ? opEsc(opRecipeFilter) : t('opPickRecipe');
+      var dropOpts = '<button class="op-rdopt'+(opRecipeFilter===''?' sel':'')+'" onclick="setRecipeFilter(\'\');event.stopPropagation()">'+
+        t('opAllRecipes')+'<span class="op-rdopt-n">'+fullList.length+'</span></button>'+
+        rKeys.map(function(k){
+          var r=recipes[k], pcsStr=r.pcs>0?' · '+r.pcs+' '+t('pcs'):'';
+          return '<button class="op-rdopt'+(opRecipeFilter===k?' sel':'')+'" onclick="setRecipeFilter(\''+k.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\');event.stopPropagation()">'+
+            opEsc(k)+'<span class="op-rdopt-n">'+r.cnt+pcsStr+'</span></button>';
+        }).join('');
+      controls = '<div class="op-rfilter-wrap" id="op-rfilter-wrap" onclick="event.stopPropagation()">'+
+        '<div class="op-rfbtn-row">'+
+          '<button class="op-rfbtn'+(opRecipeFilter?' is-set':'')+'" id="op-rfbtn" onclick="toggleRecipeDrop();event.stopPropagation()">'+
+            '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>'+
+            '<span>'+btnLabel+'</span><svg class="rfchev" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></button>'+
+          (opRecipeFilter?'<button class="op-rfclear" onclick="clearRecipeFilter();event.stopPropagation()">&#x2715;</button>':'')+
+        '</div>'+
+        '<div class="op-rdrop" id="op-rdrop">'+dropOpts+'</div>'+
+      '</div>';
+    }
+
+    // Render: matching + urgent from other recipes
+    var listToShow, urgentOtherHtml = '', planBanner = '', numbered = false;
+    if(groupable && opRecipeFilter) {
+      var matching = fullList.filter(function(c){ return (c.ricetta||'').trim() === opRecipeFilter; }).sort(opSort);
+      var urgOther = fullList.filter(function(c){ return (c.ricetta||'').trim() !== opRecipeFilter && c.prioKey==='urgente'; }).sort(opSort);
+      if(urgOther.length) {
+        urgentOtherHtml = '<div class="op-sec urgent" style="margin-top:0">⚠ '+t('opUrgentOther')+'</div>'+
+          urgOther.map(function(c){ return opCardHtml(c, false); }).join('');
+      }
+      listToShow = matching;
+    } else if(opTab==='todo') {
+      // Shift plan: numbered sequence (manual = pinned + groups; auto = algorithm)
+      listToShow = planOperatorTodo(fullList);
+      numbered = true;
+      planBanner = '<div class="op-plan-banner '+(planMode==='manual'?'manual':'auto')+'">'+
+        (planMode==='manual' ? t('planBy') : t('planByAuto'))+'</div>';
+    } else {
+      listToShow = fullList.sort(opSort);
+    }
+    var cardsHtml = listToShow.length
+      ? listToShow.map(function(c,i){ return opCardHtml(c, isDone, numbered?(i+1):0); }).join('')
+      : '<div class="op-empty">'+emptyMsg+'</div>';
+    body = controls + planBanner + urgentOtherHtml + cardsHtml;
+  }
+
+  document.getElementById('op-content').innerHTML = tabBar + body;
+}
+function setOpTab(tab){ opTab = tab; opRecipeFilter=''; renderOperator(); }
+function toggleRecipeDrop(){
+  var d=document.getElementById('op-rdrop'), b=document.getElementById('op-rfbtn');
+  if(!d) return; var open=d.classList.toggle('open'); if(b) b.classList.toggle('open', open);
+}
+function setRecipeFilter(r){ opRecipeFilter=r; renderOperator(); }
+function clearRecipeFilter(){ opRecipeFilter=''; renderOperator(); }
+
+function opIsUrgent(c){ return c.prioKey === 'urgente'; }
+function opMaxAge(g){ var m = -1; g.forEach(function(c){ var d = daysWaiting(c); if(d !== null && d > m) m = d; }); return m; }
+
+// Group the list by wash recipe (e.g. Maldives Blue, Green Cast) for batching
+function renderGroups(list, isDone) {
+  var groups = {};
+  list.forEach(function(c){
+    var key = (c.ricetta || '').trim() || '\u2014';
+    (groups[key] = groups[key] || []).push(c);
+  });
+  var keys = Object.keys(groups).sort(function(a,b){
+    if(a==='\u2014' && b!=='\u2014') return 1;          // no-recipe group last
+    if(b==='\u2014' && a!=='\u2014') return -1;
+    var ua = groups[a].some(opIsUrgent)?0:1, ub = groups[b].some(opIsUrgent)?0:1;
+    if(ua!==ub) return ua-ub;                            // groups with urgents first
+    var aa = opMaxAge(groups[a]), ab = opMaxAge(groups[b]);
+    if(ab!==aa) return ab-aa;                            // oldest-waiting batch first
+    if(groups[b].length!==groups[a].length) return groups[b].length-groups[a].length;
+    return a.localeCompare(b);
+  });
+  return keys.map(function(k){
+    var g = groups[k].sort(opSort);
+    var urg = g.some(opIsUrgent);
+    var name = (k==='\u2014') ? t('opNoRecipe') : opEsc(k);
+    return '<div class="op-group'+(urg?' urgent':'')+'">'+
+      '<div class="op-group-head"><span class="op-group-name">'+name+'</span>'+
+        (urg?'<span class="op-group-urg">'+t('prioUrgent')+'</span>':'')+
+        '<span class="op-group-n">'+g.length+'</span></div>'+
+      g.map(function(c){ return opCardHtml(c, isDone); }).join('')+
+    '</div>';
+  }).join('');
+}
+
+// Alpha: actions are NOT sent to the sheet — just feedback.
+// Operator action — writes to the same sheet/endpoint as the manager view.
+function opAction(req, stato, btn) {
+  var card = btn ? btn.closest('.op-card') : null;
+  if(card) card.classList.add('saving');
+  jsonpCall(SCRIPT_URL, { action:'update', req:req, stato:stato }).then(function(res) {
+    if(res && res.success) {
+      var it = allCampioni.filter(function(c){ return c.req === req; })[0];
+      if(it) {
+        it.statoRaw = res.status || stato;
+        it.statoKey = getStatoKey(it.statoRaw);
+        if(res.lastUpdate) it.lastUpdate = res.lastUpdate;
+        if(res.dataUscita) it.dataUscita = res.dataUscita;
+      }
+      var su = String(stato).toUpperCase();
+      var destLabel = su.indexOf('COMPLETED')!==-1 ? t('lblCompleted') : su.indexOf('BLOCKED')!==-1 ? t('lblBlocked') : t('lblProgress');
+      opToast('→ ' + destLabel);
+      renderOperator();                       // instant feedback
+      setTimeout(loadCampioni, 1000);         // reconcile + keep manager view in sync
+    } else {
+      if(card) card.classList.remove('saving');
+      opToast(t('opErr'), true);
+    }
+  }).catch(function(e) {
+    console.error(e);
+    if(card) card.classList.remove('saving');
+    opToast(t('opErr'), true);
+  });
+}
+
+var opToastTimer;
+function opToast(msg, err) {
+  var el = document.getElementById('op-toast');
+  if(!el) { el = document.createElement('div'); el.id = 'op-toast'; el.className = 'op-toast'; document.body.appendChild(el); }
+  el.textContent = msg; el.className = 'op-toast show' + (err ? ' err' : '');
+  clearTimeout(opToastTimer); opToastTimer = setTimeout(function(){ el.className = 'op-toast' + (err ? ' err' : ''); }, 2200);
+}
+
+document.getElementById('op-search-input').addEventListener('input', function(e) {
+  opSearchQ = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+  renderOperator();
+});
+
+// ─── PUSH NOTIFICATIONS ─────────────────────────────────────────────────────
+// Talks directly to the standalone push-server (see /push-server). Does
+// nothing if PUSH_SERVER_URL is empty — the rest of the app is unaffected.
+
+function pushEnabled(){
+  return !!PUSH_SERVER_URL && 'serviceWorker' in navigator && 'PushManager' in window;
+}
+
+// Convert a base64url VAPID key into the Uint8Array format PushManager wants
+function urlBase64ToUint8Array(base64String){
+  var padding = '='.repeat((4 - base64String.length % 4) % 4);
+  var base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  var raw = atob(base64);
+  var arr = new Uint8Array(raw.length);
+  for (var i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+  return arr;
+}
+
+function registerServiceWorker(){
+  if(!pushEnabled()) return Promise.resolve(null);
+  return navigator.serviceWorker.register('sw.js').catch(function(e){
+    console.error('SW registration failed', e); return null;
+  });
+}
+
+// Current subscription state, used to show/hide the "Enable notifications" banner
+function refreshPushBanner(){
+  var banner = document.getElementById('op-push-banner');
+  if(!banner) return;
+  if(!pushEnabled()){ banner.style.display = 'none'; return; }
+  if(Notification.permission === 'granted'){
+    navigator.serviceWorker.ready.then(function(reg){
+      reg.pushManager.getSubscription().then(function(sub){
+        banner.style.display = sub ? 'none' : '';
+      });
+    });
+  } else if(Notification.permission === 'denied'){
+    banner.style.display = 'none';   // user said no — don't nag
+  } else {
+    banner.style.display = '';
+  }
+}
+
+function enablePushNotifications(){
+  if(!pushEnabled()) return;
+  registerServiceWorker().then(function(reg){
+    if(!reg) return;
+    return Notification.requestPermission().then(function(perm){
+      if(perm !== 'granted'){ refreshPushBanner(); return; }
+      return reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+      }).then(function(sub){
+        return fetch(PUSH_SERVER_URL + '/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ operatorId: PUSH_OPERATOR_ID, subscription: sub })
+        });
+      }).then(function(){
+        opToast(t('pushEnabled'));
+        refreshPushBanner();
+      });
+    });
+  }).catch(function(e){
+    console.error('enablePushNotifications', e);
+    opToast(t('opErr'), true);
+  });
+}
+
+// Fire-and-forget: send a push notification via the push-server.
+// Safe to call even if push isn't configured (PUSH_SERVER_URL === '').
+function sendPushNotification(title, body, tag){
+  if(!PUSH_SERVER_URL) return;
+  fetch(PUSH_SERVER_URL + '/send', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      secret: PUSH_SECRET,
+      operatorId: PUSH_OPERATOR_ID,
+      title: title,
+      body: body,
+      tag: tag || 'saitex',
+      url: '/'
+    })
+  }).catch(function(e){ console.error('sendPushNotification', e); });
+}
+// ────────────────────────────────────────────────────────────────────────────
+
+applyLang();
+loadCampioni();
+loadPlan();
+loadMessages();
+registerServiceWorker().then(function(){ refreshPushBanner(); });
+setInterval(loadCampioni, 60000);
+setInterval(loadMessages, 60000);
+document.addEventListener('click', function(){
+  var d=document.getElementById('op-rdrop'), b=document.getElementById('op-rfbtn');
+  if(d&&d.classList.contains('open')){ d.classList.remove('open'); if(b) b.classList.remove('open'); }
+});
+</script>
+</body>
+</html>
