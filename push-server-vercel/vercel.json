@@ -3,6 +3,8 @@
     { "source": "/subscribe", "destination": "/api/subscribe" },
     { "source": "/unsubscribe", "destination": "/api/unsubscribe" },
     { "source": "/send", "destination": "/api/send" },
-    { "source": "/health", "destination": "/api/health" }
+    { "source": "/health", "destination": "/api/health" },
+    { "source": "/upload-photo", "destination": "/api/upload-photo" },
+    { "source": "/photo/:id", "destination": "/api/photo/:id" }
   ]
 }
