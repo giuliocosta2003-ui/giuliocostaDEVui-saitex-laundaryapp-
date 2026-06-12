@@ -1,6 +1,7 @@
 // POST /send  { secret, operatorId?, title, body, url?, tag? }
-// Looks up the stored subscription(s) in Redis (Upstash or Vercel KV) and
-// sends a Web Push notification via web-push (VAPID).
+// Sends a Web Push notification (VAPID, via web-push) to EVERY device
+// subscribed under this operatorId/role — e.g. if "manager-1" has both a
+// PC and a phone subscribed, both receive it.
 
 import webpush from 'web-push';
 import { getRedis } from '../lib/redis.js';
@@ -35,11 +36,45 @@ export default async function handler(req, res) {
   }
 
   const id = operatorId || 'operator-1';
-  const raw = await redis.get('sub:' + id);
-  if (!raw) {
-    return res.json({ success: true, sent: 0, note: 'no subscription registered for ' + id });
+
+  // New format: one key per device, "sub:{id}:{deviceId}"
+  let deviceKeys = [];
+  try {
+    deviceKeys = await redis.keys('sub:' + id + ':*');
+  } catch (e) {
+    deviceKeys = [];
   }
-  const subscription = typeof raw === 'string' ? JSON.parse(raw) : raw;
+
+  // Old format: a single key "sub:{id}" (kept for subscriptions created
+  // before per-device keys existed)
+  const legacyKey = 'sub:' + id;
+  const allKeys = Array.from(new Set([...deviceKeys, legacyKey]));
+
+  const entries = [];
+  for (const key of allKeys) {
+    const raw = await redis.get(key);
+    if (!raw) continue;
+    try {
+      const sub = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      entries.push({ key, sub });
+    } catch (e) {
+      // ignore malformed entries
+    }
+  }
+
+  // De-dupe by endpoint — the same device could in theory appear under
+  // both the legacy key and a per-device key.
+  const seen = new Set();
+  const targets = entries.filter(function (e) {
+    const ep = e.sub && e.sub.endpoint;
+    if (!ep || seen.has(ep)) return false;
+    seen.add(ep);
+    return true;
+  });
+
+  if (!targets.length) {
+    return res.json({ success: true, sent: 0, note: 'no subscriptions registered for ' + id });
+  }
 
   const payload = JSON.stringify({
     title: title || 'Saitex Laundry',
@@ -48,14 +83,19 @@ export default async function handler(req, res) {
     tag: tag || 'saitex'
   });
 
-  try {
-    await webpush.sendNotification(subscription, payload);
-    res.json({ success: true, sent: 1 });
-  } catch (err) {
-    // 404/410 = the subscription is gone (uninstalled, expired) — clean it up
-    if (err.statusCode === 404 || err.statusCode === 410) {
-      await redis.del('sub:' + id);
+  const results = [];
+  for (const { key, sub } of targets) {
+    try {
+      await webpush.sendNotification(sub, payload);
+      results.push({ key, success: true });
+    } catch (err) {
+      results.push({ key, success: false, error: err.message, statusCode: err.statusCode || null });
+      // 404/410 = this device's subscription is gone — clean it up
+      if (err.statusCode === 404 || err.statusCode === 410) {
+        await redis.del(key);
+      }
     }
-    res.json({ success: false, error: err.message, statusCode: err.statusCode || null });
   }
+
+  res.json({ success: true, sent: results.filter(function (r) { return r.success; }).length, results });
 }
