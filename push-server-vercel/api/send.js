@@ -55,8 +55,11 @@ export default async function handler(req, res) {
     const raw = await redis.get(key);
     if (!raw) continue;
     try {
-      const sub = typeof raw === 'string' ? JSON.parse(raw) : raw;
-      entries.push({ key, sub });
+      const data = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      // New format: { subscription, label, updatedAt }. Old format: the
+      // subscription object itself (has .endpoint directly).
+      const sub = data && data.subscription ? data.subscription : data;
+      if (sub && sub.endpoint) entries.push({ key, sub });
     } catch (e) {
       // ignore malformed entries
     }

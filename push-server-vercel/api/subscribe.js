@@ -1,9 +1,10 @@
-// POST /subscribe  { operatorId, deviceId, subscription }
+// POST /subscribe  { operatorId, deviceId, label, subscription }
 // Stores the subscription in Redis (Upstash or Vercel KV), keyed by
 // operatorId AND deviceId — so the same role (e.g. "manager-1") can have
 // multiple devices subscribed at once (PC + phone) without overwriting
 // each other. deviceId is a random id the app generates once and keeps in
-// localStorage.
+// localStorage. label is a free-text name the person typed at login (e.g.
+// "Mai"), stored alongside the subscription so devices can be told apart.
 
 import { getRedis } from '../lib/redis.js';
 
@@ -29,12 +30,17 @@ export default async function handler(req, res) {
     return res.status(500).json({ success: false, error: 'redis not configured (check environment variables)' });
   }
 
-  const { operatorId, deviceId, subscription } = req.body || {};
+  const { operatorId, deviceId, label, subscription } = req.body || {};
   if (!operatorId || !subscription || !subscription.endpoint) {
     return res.status(400).json({ success: false, error: 'missing operatorId or subscription' });
   }
 
   const did = sanitizeDeviceId(deviceId);
-  await redis.set('sub:' + operatorId + ':' + did, JSON.stringify(subscription));
+  const record = {
+    subscription: subscription,
+    label: (label || '').toString().slice(0, 60),
+    updatedAt: Date.now()
+  };
+  await redis.set('sub:' + operatorId + ':' + did, JSON.stringify(record));
   res.json({ success: true });
 }
